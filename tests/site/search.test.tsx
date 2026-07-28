@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { CommandMenu } from "@/components/site/command-menu"
 import { SiteHeader } from "@/components/site/site-header"
 import type { SearchDocument } from "@/src/registry/search-index"
 import { rankSearch } from "@/src/registry/search"
@@ -61,7 +62,10 @@ describe("rankSearch", () => {
 })
 
 describe("CommandMenu", () => {
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
 
   it("opens from the shortcut, filters static documents, and exposes navigable results", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => docs }))
@@ -82,5 +86,36 @@ describe("CommandMenu", () => {
     expect(results[1]).toHaveAttribute("href", "/items/button-group/")
     fireEvent.keyDown(window, { key: "Escape" })
     expect(screen.queryByRole("dialog", { name: "搜索资产" })).not.toBeInTheDocument()
+  })
+
+  it("navigates the arrow-selected result when Enter is pressed", async () => {
+    const onNavigate = vi.fn()
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => docs }))
+    render(<CommandMenu open onOpenChange={vi.fn()} onNavigate={onNavigate} />)
+
+    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")).toHaveLength(3))
+    fireEvent.change(screen.getByRole("combobox", { name: "状态" }), { target: { value: "stable" } })
+    fireEvent.keyDown(window, { key: "ArrowDown" })
+    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")[1]).toHaveAttribute("aria-selected", "true"))
+    fireEvent.keyDown(window, { key: "Enter" })
+
+    expect(onNavigate).toHaveBeenCalledWith("/items/button-group/")
+  })
+
+  it("clears a transient loading error after reopening and retrying", async () => {
+    const fetchSearchIndex = vi.fn()
+      .mockRejectedValueOnce(new Error("temporary failure"))
+      .mockResolvedValueOnce({ ok: true, json: async () => docs })
+    vi.stubGlobal("fetch", fetchSearchIndex)
+    const onOpenChange = vi.fn()
+    const view = render(<CommandMenu open onOpenChange={onOpenChange} />)
+
+    expect(await screen.findByText("搜索索引加载失败，请稍后重试。")).toBeInTheDocument()
+    view.rerender(<CommandMenu open={false} onOpenChange={onOpenChange} />)
+    view.rerender(<CommandMenu open onOpenChange={onOpenChange} />)
+
+    await waitFor(() => expect(screen.queryByText("搜索索引加载失败，请稍后重试。")).not.toBeInTheDocument())
+    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")).toHaveLength(3))
+    expect(fetchSearchIndex).toHaveBeenCalledTimes(2)
   })
 })

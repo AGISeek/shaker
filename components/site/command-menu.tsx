@@ -7,11 +7,16 @@ import type { SearchDocument } from "@/src/registry/search-index"
 type CommandMenuProps = {
   open: boolean
   onOpenChange(open: boolean): void
+  onNavigate?(href: string): void
 }
 
 const initialFilters: SearchFilters = {}
 
-export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
+function navigateToAsset(href: string) {
+  window.location.assign(href)
+}
+
+export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }: CommandMenuProps) {
   const [documents, setDocuments] = useState<SearchDocument[]>([])
   const [query, setQuery] = useState("")
   const [filters, setFilters] = useState<SearchFilters>(initialFilters)
@@ -27,6 +32,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     if (hasLoaded) return
 
     let cancelled = false
+    setLoadError(false)
     fetch("/search-index.json")
       .then((response) => {
         if (!response.ok) throw new Error("无法加载搜索索引")
@@ -36,6 +42,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
         if (!cancelled) {
           setDocuments(items)
           setHasLoaded(true)
+          setLoadError(false)
         }
       })
       .catch(() => {
@@ -66,12 +73,12 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
       }
       if (event.key === "Enter" && results[activeIndex]) {
         event.preventDefault()
-        window.location.assign(results[activeIndex].href)
+        onNavigate(results[activeIndex].href)
       }
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [activeIndex, onOpenChange, open, results])
+  }, [activeIndex, onNavigate, onOpenChange, open, results])
 
   if (!open) return null
 
