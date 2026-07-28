@@ -1,0 +1,10 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "internal",
+  "homepage": "https://internal.example",
+  "include": [
+    "ui/registry.json",
+    "blocks/registry.json",
+    "templates/registry.json"
+  ]
+}

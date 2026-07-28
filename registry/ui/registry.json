@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "internal-ui",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "A simple button component for internal interfaces.",
+      "categories": ["ui", "form"],
+      "docs": "https://internal.example/docs/button",
+      "files": [
+        {
+          "path": "registry/ui/button/button.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/button/preview.tsx",
+          "type": "registry:example"
+        }
+      ],
+      "meta": {
+        "status": "stable",
+        "preview": "registry/ui/button/preview.tsx",
+        "addedAt": "2026-07-29",
+        "origin": "internal",
+        "sourceRef": "main"
+      }
+    }
+  ]
+}
