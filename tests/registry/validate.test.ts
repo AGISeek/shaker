@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
@@ -108,6 +108,46 @@ describe("validateCatalog", () => {
     })
   })
 
+  it("reports an absent in-repository file", async () => {
+    const issues = await validateCatalog(
+      [item("a", { files: [{ path: "registry/ui/missing.tsx", type: "registry:ui" }] })],
+      fixtureRoot,
+    )
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "files[].path",
+      message: "File does not exist: registry/ui/missing.tsx",
+    })
+  })
+
+  it("rejects file and preview symlinks that escape the repository", async () => {
+    const externalRoot = await mkdtemp(join(tmpdir(), "registry-validation-external-"))
+    const externalFile = join(externalRoot, "external.tsx")
+    const sourceDirectory = join(fixtureRoot, "registry", "ui")
+    await writeFile(externalFile, "export {}")
+    await symlink(externalFile, join(sourceDirectory, "outside-file.tsx"))
+    await symlink(externalFile, join(sourceDirectory, "outside-preview.tsx"))
+
+    const issues = await validateCatalog(
+      [item("a", {
+        files: [{ path: "registry/ui/outside-file.tsx", type: "registry:ui" }],
+        meta: { ...item("a").meta, preview: "registry/ui/outside-preview.tsx" },
+      })],
+      fixtureRoot,
+    )
+
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "files[].path",
+      message: "File path is outside the repository: registry/ui/outside-file.tsx",
+    })
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "meta.preview",
+      message: "Preview file is outside the repository: registry/ui/outside-preview.tsx",
+    })
+  })
+
   it("reports a preview included in the installation payload", async () => {
     const preview = "registry/ui/a.preview.tsx"
     const issues = await validateCatalog([item("a", { files: [{ path: preview, type: "registry:ui" }] })], fixtureRoot)
@@ -149,6 +189,18 @@ describe("validateCatalog", () => {
       item: "a",
       field: "meta.replacedBy",
       message: "Replacement must not reference itself",
+    })
+  })
+
+  it("reports a deprecated item with a nonexistent replacement", async () => {
+    const issues = await validateCatalog(
+      [item("a", { meta: { ...item("a").meta, status: "deprecated", replacedBy: "missing" } })],
+      fixtureRoot,
+    )
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "meta.replacedBy",
+      message: "Replacement does not exist: missing",
     })
   })
 

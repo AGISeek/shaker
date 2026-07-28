@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises"
+import { realpath } from "node:fs/promises"
 import { resolve, sep } from "node:path"
 import { findDependencyCycle, internalDependencyNames } from "./dependency-graph"
 import type { InternalRegistryItem } from "./types"
@@ -37,17 +37,23 @@ function sourcePaths(cwd: string, sourcePath: string): string[] {
   return [resolve(cwd, sourcePath), resolve(cwd, "registry", sourcePath)]
 }
 
-async function existingSourcePath(cwd: string, sourcePath: string): Promise<string | null> {
+type SourcePathResult =
+  | { kind: "found"; path: string }
+  | { kind: "missing" }
+  | { kind: "outside" }
+
+async function existingSourcePath(cwd: string, sourcePath: string): Promise<SourcePathResult> {
   for (const candidate of sourcePaths(cwd, sourcePath)) {
-    if (!isWithin(cwd, candidate)) continue
+    if (!isWithin(cwd, candidate)) return { kind: "outside" }
     try {
-      await access(candidate)
-      return candidate
+      const canonicalCandidate = await realpath(candidate)
+      if (!isWithin(cwd, canonicalCandidate)) return { kind: "outside" }
+      return { kind: "found", path: canonicalCandidate }
     } catch {
       // Check the next source-root-compatible path.
     }
   }
-  return null
+  return { kind: "missing" }
 }
 
 export async function validateCatalog(
@@ -55,7 +61,7 @@ export async function validateCatalog(
   cwd = process.cwd(),
 ): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = []
-  const root = resolve(cwd)
+  const root = await realpath(resolve(cwd))
   const names = new Set<string>()
   const itemNames = new Set(items.map((item) => item.name))
 
@@ -81,8 +87,14 @@ export async function validateCatalog(
   const previews = new Map<string, string | null>()
   for (const item of items) {
     const preview = await existingSourcePath(root, item.meta.preview)
-    previews.set(item.name, preview)
-    if (!preview) {
+    previews.set(item.name, preview.kind === "found" ? preview.path : null)
+    if (preview.kind === "outside") {
+      issues.push({
+        item: item.name,
+        field: "meta.preview",
+        message: `Preview file is outside the repository: ${item.meta.preview}`,
+      })
+    } else if (preview.kind === "missing") {
       issues.push({
         item: item.name,
         field: "meta.preview",
@@ -95,8 +107,8 @@ export async function validateCatalog(
   for (const item of items) {
     const filePaths = new Set<string>()
     for (const file of item.files ?? []) {
-      const candidates = sourcePaths(root, file.path)
-      if (!isWithin(root, candidates[0]!)) {
+      const sourcePath = await existingSourcePath(root, file.path)
+      if (sourcePath.kind === "outside") {
         issues.push({
           item: item.name,
           field: "files[].path",
@@ -104,13 +116,11 @@ export async function validateCatalog(
         })
         continue
       }
-
-      const sourcePath = await existingSourcePath(root, file.path)
-      if (!sourcePath) {
+      if (sourcePath.kind === "missing") {
         issues.push({ item: item.name, field: "files[].path", message: `File does not exist: ${file.path}` })
         continue
       }
-      filePaths.add(sourcePath)
+      filePaths.add(sourcePath.path)
     }
     filesByItem.set(item.name, filePaths)
   }
