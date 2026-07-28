@@ -1,0 +1,11 @@
+.worktrees/
+.superpowers/
+node_modules/
+.next/
+out/
+dist/
+generated/preview-map.ts
+public/r/
+public/search-index.json
+playwright-report/
+test-results/
