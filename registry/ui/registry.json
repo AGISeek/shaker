@@ -11,11 +11,11 @@
       "docs": "https://internal.example/docs/button",
       "files": [
         {
-          "path": "registry/ui/button/button.tsx",
+          "path": "button/button.tsx",
           "type": "registry:ui"
         },
         {
-          "path": "registry/ui/button/preview.tsx",
+          "path": "button/preview.tsx",
           "type": "registry:example"
         }
       ],
