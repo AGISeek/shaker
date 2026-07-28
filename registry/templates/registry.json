@@ -1,5 +1,28 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "internal-templates",
-  "items": []
+  "items": [
+    {
+      "name": "admin-dashboard",
+      "type": "registry:page",
+      "title": "Admin Dashboard",
+      "description": "包含统计与审批列表的管理后台页面模板。",
+      "categories": ["dashboard", "workflow"],
+      "registryDependencies": ["@internal/approval-card"],
+      "files": [
+        {
+          "path": "admin-dashboard/page.tsx",
+          "type": "registry:page",
+          "target": "app/admin/page.tsx"
+        }
+      ],
+      "meta": {
+        "status": "stable",
+        "preview": "registry/templates/admin-dashboard/preview.tsx",
+        "addedAt": "2026-07-29",
+        "origin": "internal",
+        "sourceRef": "main"
+      }
+    }
+  ]
 }

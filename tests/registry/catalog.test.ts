@@ -3,10 +3,10 @@ import { loadRegistryItem } from "shadcn/registry"
 import { loadCatalog } from "@/src/registry/catalog"
 
 describe("loadCatalog", () => {
-  it("resolves includes and returns the button item", async () => {
+  it("resolves included registry items", async () => {
     const items = await loadCatalog()
-    expect(items.map((item) => item.name)).toEqual(["button"])
-    expect(items[0]?.meta).toMatchObject({
+    expect(items.map((item) => item.name)).toEqual(["button", "approval-card", "admin-dashboard"])
+    expect(items.find((item) => item.name === "button")?.meta).toMatchObject({
       status: "stable",
       preview: "registry/ui/button/preview.tsx",
       addedAt: "2026-07-29",

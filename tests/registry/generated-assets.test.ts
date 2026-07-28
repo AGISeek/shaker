@@ -11,7 +11,7 @@ describe("generateAssets", () => {
     expect(preview).toContain(
       '"button": dynamic(() => import("../registry/ui/button/preview"), { ssr: false })',
     )
-    expect(search[0]).toMatchObject({
+    expect(search.find((item: { name: string }) => item.name === "button")).toMatchObject({
       name: "button",
       status: "stable",
       href: "/items/button/",
