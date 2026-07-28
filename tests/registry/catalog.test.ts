@@ -19,10 +19,7 @@ describe("loadCatalog", () => {
       registryFile: "registry/registry.json",
     })
 
-    expect(item.files?.map((file) => file.path)).toEqual([
-      "ui/button/button.tsx",
-      "ui/button/preview.tsx",
-    ])
+    expect(item.files?.map((file) => file.path)).toEqual(["ui/button/button.tsx"])
     expect(item.files?.[0]?.content).toContain("export function Button")
   })
 })

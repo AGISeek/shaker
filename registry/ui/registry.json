@@ -13,10 +13,6 @@
         {
           "path": "button/button.tsx",
           "type": "registry:ui"
-        },
-        {
-          "path": "button/preview.tsx",
-          "type": "registry:example"
         }
       ],
       "meta": {

@@ -1,9 +1,11 @@
 {
   "name": "internal-shadcn-registry",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10",
   "scripts": {
     "build:site": "next build",
+    "registry:validate": "tsx scripts/validate-registry.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
@@ -26,6 +28,7 @@
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
     "jsdom": "latest",
+    "tsx": "^4.19.2",
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"
