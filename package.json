@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10",
   "scripts": {
     "build:site": "next build",
+    "registry:generate": "tsx scripts/generate-preview-map.mjs && tsx scripts/build-search-index.mjs",
     "registry:validate": "tsx scripts/validate-registry.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
