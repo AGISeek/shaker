@@ -10,7 +10,8 @@ type GroupedAssetIndexProps = {
 export function GroupedAssetIndex({ title, description, items }: GroupedAssetIndexProps) {
   const groups = new Map<string, InternalRegistryItem[]>()
   for (const item of items) {
-    for (const category of item.categories ?? ["未分类"]) {
+    const categories = item.categories?.length ? item.categories : ["未分类"]
+    for (const category of categories) {
       groups.set(category, [...(groups.get(category) ?? []), item])
     }
   }

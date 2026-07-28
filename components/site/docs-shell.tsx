@@ -19,6 +19,13 @@ type DocsShellProps = {
 export function DocsShell({ navigation, toc, children }: DocsShellProps) {
   return (
     <div className="docs-shell">
+      <details className="docs-shell__mobile-nav">
+        <summary>文档导航</summary>
+        <nav aria-label="移动文档导航">
+          {navigation.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
+          {toc?.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
+        </nav>
+      </details>
       <aside className="docs-shell__nav" aria-label="文档导航">
         <p className="eyebrow">文档</p>
         <nav>
