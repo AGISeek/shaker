@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { withBasePath } from "@/src/base-path"
 
 type PreviewFrameProps = { name: string; title: string; code?: string }
 type Width = "1280" | "768" | "390"
@@ -12,7 +13,7 @@ export function PreviewFrame({ name, title, code }: PreviewFrameProps) {
   const [refresh, setRefresh] = useState(0)
   const [copied, setCopied] = useState(false)
   const [copyFailed, setCopyFailed] = useState(false)
-  const src = theme === "light" ? `/preview/${name}/` : `/preview/${name}/?theme=dark`
+  const src = withBasePath(theme === "light" ? `/preview/${name}/` : `/preview/${name}/?theme=dark`)
   const command = `pnpm dlx shadcn@latest add @internal/${name}`
 
   async function copyCommand() {

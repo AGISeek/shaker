@@ -1,4 +1,5 @@
 import type { InternalRegistryItem } from "@/src/registry/types"
+import { withBasePath } from "@/src/base-path"
 
 type AssetIndexProps = {
   title: string
@@ -8,7 +9,7 @@ type AssetIndexProps = {
 
 function AssetLink({ item, labelSuffix }: { item: InternalRegistryItem; labelSuffix?: string }) {
   return (
-    <a className="asset-link" href={`/items/${item.name}/`} aria-label={`${item.title ?? item.name}${labelSuffix ?? ""}`}>
+    <a className="asset-link" href={withBasePath(`/items/${item.name}/`)} aria-label={`${item.title ?? item.name}${labelSuffix ?? ""}`}>
       <span>
         <strong>{item.title ?? item.name}</strong>
         <small>{item.description}</small>

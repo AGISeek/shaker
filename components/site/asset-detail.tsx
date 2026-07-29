@@ -3,6 +3,7 @@
 import { useState } from "react"
 import type { ItemSource } from "@/src/registry/source"
 import type { InternalRegistryItem } from "@/src/registry/types"
+import { withBasePath } from "@/src/base-path"
 import { PreviewFrame } from "./preview-frame"
 
 export function AssetDetail({ item, sources }: { item: InternalRegistryItem; sources: ItemSource[] }) {
@@ -28,7 +29,7 @@ export function AssetDetail({ item, sources }: { item: InternalRegistryItem; sou
         <h1>{item.title ?? item.name}</h1>
         <p className="asset-detail__meta">状态：{item.meta.status} · 来源：{item.meta.origin}</p>
         {item.description ? <p className="page-intro">{item.description}</p> : null}
-        {item.meta.status === "deprecated" ? <p className="asset-warning"><strong>此资产已弃用</strong>。{item.meta.replacedBy ? <>请改用 <a href={`/items/${item.meta.replacedBy}/`}>{item.meta.replacedBy}</a>。</> : null}</p> : null}
+        {item.meta.status === "deprecated" ? <p className="asset-warning"><strong>此资产已弃用</strong>。{item.meta.replacedBy ? <>请改用 <a href={withBasePath(`/items/${item.meta.replacedBy}/`)}>{item.meta.replacedBy}</a>。</> : null}</p> : null}
       </header>
       <section><h2>Preview</h2><PreviewFrame name={item.name} title={item.title ?? item.name} code={sources[0]?.content} /></section>
       <section><h2>Code</h2>{sources.length ? sources.map((source) => <details key={source.path}><summary>{source.path}</summary><pre><code>{source.content}</code></pre></details>) : <p>暂无源码文件。</p>}</section>

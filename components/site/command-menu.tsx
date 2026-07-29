@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { rankSearch, type SearchFilters } from "@/src/registry/search"
+import { withBasePath } from "@/src/base-path"
 import type { SearchDocument } from "@/src/registry/search-index"
 
 type CommandMenuProps = {
@@ -33,7 +34,7 @@ export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }
 
     let cancelled = false
     setLoadError(false)
-    fetch("/search-index.json")
+    fetch(withBasePath("/search-index.json"))
       .then((response) => {
         if (!response.ok) throw new Error("无法加载搜索索引")
         return response.json() as Promise<SearchDocument[]>
@@ -73,7 +74,7 @@ export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }
       }
       if (event.key === "Enter" && results[activeIndex]) {
         event.preventDefault()
-        onNavigate(results[activeIndex].href)
+        onNavigate(withBasePath(results[activeIndex].href))
       }
     }
     window.addEventListener("keydown", onKeyDown)
@@ -115,7 +116,7 @@ export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }
             <a
               key={result.name}
               className={index === activeIndex ? "command-menu__result is-active" : "command-menu__result"}
-              href={result.href}
+              href={withBasePath(result.href)}
               role="option"
               aria-selected={index === activeIndex}
               onMouseEnter={() => setActiveIndex(index)}
