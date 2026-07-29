@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "button",
+  "type": "registry:ui",
+  "title": "Button",
+  "description": "Displays a button or a component that looks like a button.",
+  "dependencies": ["@radix-ui/react-slot"],
+  "files": [
+    {
+      "path": "ui/button.tsx",
+      "type": "registry:ui",
+      "target": "components/ui/button.tsx",
+      "content": "import * as React from \"react\"\nimport { Slot } from \"@radix-ui/react-slot\"\n\nexport function Button({ asChild = false, ...props }: React.ComponentProps<\"button\"> & { asChild?: boolean }) {\n  const Comp = asChild ? Slot : \"button\"\n  return <Comp data-slot=\"button\" {...props} />\n}\n"
+    }
+  ]
+}
