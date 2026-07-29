@@ -1,9 +1,25 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/ui/command"
+import { Dialog, DialogContent, DialogTitle } from "@/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select"
 import { rankSearch, type SearchFilters } from "@/src/registry/search"
-import { withBasePath } from "@/src/base-path"
 import type { SearchDocument } from "@/src/registry/search-index"
+import { withBasePath } from "@/src/base-path"
 
 type CommandMenuProps = {
   open: boolean
@@ -11,7 +27,7 @@ type CommandMenuProps = {
   onNavigate?(href: string): void
 }
 
-const initialFilters: SearchFilters = {}
+const ALL = "__all__"
 
 function navigateToAsset(href: string) {
   window.location.assign(href)
@@ -20,17 +36,12 @@ function navigateToAsset(href: string) {
 export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }: CommandMenuProps) {
   const [documents, setDocuments] = useState<SearchDocument[]>([])
   const [query, setQuery] = useState("")
-  const [filters, setFilters] = useState<SearchFilters>(initialFilters)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [filters, setFilters] = useState<SearchFilters>({})
   const [hasLoaded, setHasLoaded] = useState(false)
   const [loadError, setLoadError] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!open) return
-
-    inputRef.current?.focus()
-    if (hasLoaded) return
+    if (!open || hasLoaded) return
 
     let cancelled = false
     setLoadError(false)
@@ -58,75 +69,59 @@ export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }
   const categories = useMemo(() => [...new Set(documents.flatMap((item) => item.categories))].sort(), [documents])
   const statuses = useMemo(() => [...new Set(documents.map((item) => item.status))].sort(), [documents])
 
-  useEffect(() => { setActiveIndex(0) }, [filters, query])
-
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onOpenChange(false)
-      if (event.key === "ArrowDown") {
-        event.preventDefault()
-        setActiveIndex((index) => Math.min(index + 1, Math.max(results.length - 1, 0)))
-      }
-      if (event.key === "ArrowUp") {
-        event.preventDefault()
-        setActiveIndex((index) => Math.max(index - 1, 0))
-      }
-      if (event.key === "Enter" && results[activeIndex]) {
-        event.preventDefault()
-        onNavigate(withBasePath(results[activeIndex].href))
-      }
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [activeIndex, onNavigate, onOpenChange, open, results])
-
-  if (!open) return null
-
   return (
-    <div className="command-menu-backdrop" role="presentation" onMouseDown={() => onOpenChange(false)}>
-      <section className="command-menu" role="dialog" aria-modal="true" aria-label="搜索资产" onMouseDown={(event) => event.stopPropagation()}>
-        <input
-          ref={inputRef}
-          className="command-menu__input"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索组件、区块或模板"
-          aria-label="搜索资产"
-        />
-        <div className="command-menu__filters" aria-label="筛选资产">
-          <select aria-label="类型" value={filters.type ?? ""} onChange={(event) => setFilters((current) => ({ ...current, type: event.target.value || undefined }))}>
-            <option value="">全部类型</option>
-            {types.map((type) => <option key={type} value={type}>{type}</option>)}
-          </select>
-          <select aria-label="分类" value={filters.category ?? ""} onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value || undefined }))}>
-            <option value="">全部分类</option>
-            {categories.map((category) => <option key={category} value={category}>{category}</option>)}
-          </select>
-          <select aria-label="状态" value={filters.status ?? ""} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value as SearchDocument["status"] || undefined }))}>
-            <option value="">全部状态</option>
-            {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
-          </select>
-        </div>
-        <div className="command-menu__results" role="listbox" aria-label="搜索结果">
-          {loadError && <p>搜索索引加载失败，请稍后重试。</p>}
-          {!loadError && !hasLoaded && <p>正在加载资产…</p>}
-          {hasLoaded && results.length === 0 && <p>没有匹配的资产。</p>}
-          {results.map((result, index) => (
-            <a
-              key={result.name}
-              className={index === activeIndex ? "command-menu__result is-active" : "command-menu__result"}
-              href={withBasePath(result.href)}
-              role="option"
-              aria-selected={index === activeIndex}
-              onMouseEnter={() => setActiveIndex(index)}
-            >
-              <span><strong>{result.title}</strong><small>{result.description}</small></span>
-              <small>{result.status}</small>
-            </a>
-          ))}
-        </div>
-      </section>
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="overflow-hidden p-0" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">搜索资产</DialogTitle>
+        <Command shouldFilter={false} label="搜索资产">
+          <CommandInput placeholder="搜索组件、区块或模板" value={query} onValueChange={setQuery} />
+          <div className="flex gap-2 border-b px-3 py-2" aria-label="筛选资产">
+            <FilterSelect label="类型" placeholder="全部类型" values={types} value={filters.type} onChange={(type) => setFilters((current) => ({ ...current, type }))} />
+            <FilterSelect label="分类" placeholder="全部分类" values={categories} value={filters.category} onChange={(category) => setFilters((current) => ({ ...current, category }))} />
+            <FilterSelect label="状态" placeholder="全部状态" values={statuses} value={filters.status} onChange={(status) => setFilters((current) => ({ ...current, status: status as SearchDocument["status"] | undefined }))} />
+          </div>
+          <CommandList label="搜索结果">
+            {loadError ? <p className="m-3 text-sm text-muted-foreground">搜索索引加载失败，请稍后重试。</p> : null}
+            {!loadError && !hasLoaded ? <p className="m-3 text-sm text-muted-foreground">正在加载资产…</p> : null}
+            {hasLoaded && !loadError ? (
+              <>
+                <CommandEmpty>没有匹配的资产。</CommandEmpty>
+                <CommandGroup>
+                  {results.map((result) => (
+                    <CommandItem key={result.name} value={result.name} onSelect={() => onNavigate(withBasePath(result.href))}>
+                      <span>
+                        <strong>{result.title}</strong>
+                        <small className="block text-muted-foreground">{result.description}</small>
+                      </span>
+                      <small className="text-muted-foreground">{result.status}</small>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            ) : null}
+          </CommandList>
+        </Command>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function FilterSelect({ label, placeholder, values, value, onChange }: {
+  label: string
+  placeholder: string
+  values: string[]
+  value: string | undefined
+  onChange(value: string | undefined): void
+}) {
+  return (
+    <Select value={value ?? ALL} onValueChange={(next) => onChange(next === ALL ? undefined : next)}>
+      <SelectTrigger aria-label={label} size="sm" className="w-32">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={ALL}>{placeholder}</SelectItem>
+        {values.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+      </SelectContent>
+    </Select>
   )
 }

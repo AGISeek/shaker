@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { CommandMenu } from "@/components/site/command-menu"
 import { SiteHeader } from "@/components/site/site-header"
@@ -67,24 +68,25 @@ describe("CommandMenu", () => {
     vi.restoreAllMocks()
   })
 
-  it("opens from the shortcut, filters static documents, and exposes navigable results", async () => {
+  it("opens from the shortcut, filters documents, and exposes navigable results", async () => {
+    const user = userEvent.setup()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => docs }))
     render(<SiteHeader />)
 
-    fireEvent.keyDown(window, { key: "k", ctrlKey: true })
-    const dialog = await screen.findByRole("dialog", { name: "搜索资产" })
-    expect(dialog).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /搜索资产/ })).toHaveAttribute("aria-keyshortcuts", "Control+K Meta+K")
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true })
+    expect(await screen.findByRole("dialog", { name: "搜索资产" })).toBeInTheDocument()
 
     await waitFor(() => expect(screen.getAllByRole("option", { name: /Button/ })).toHaveLength(2))
-    fireEvent.change(screen.getByRole("combobox", { name: "状态" }), { target: { value: "stable" } })
+    await user.click(screen.getByRole("combobox", { name: "状态" }))
+    await user.click(await screen.findByRole("option", { name: "stable" }))
     expect(screen.queryByRole("option", { name: /Request approval/ })).not.toBeInTheDocument()
 
-    fireEvent.keyDown(window, { key: "ArrowDown" })
+    const input = screen.getByRole("combobox", { name: "搜索资产" })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
     const results = within(screen.getByRole("listbox", { name: "搜索结果" })).getAllByRole("option")
     await waitFor(() => expect(results[1]).toHaveAttribute("aria-selected", "true"))
-    expect(results[1]).toHaveAttribute("href", "/items/button-group/")
-    fireEvent.keyDown(window, { key: "Escape" })
+    fireEvent.keyDown(input, { key: "Escape" })
     expect(screen.queryByRole("dialog", { name: "搜索资产" })).not.toBeInTheDocument()
   })
 
@@ -93,11 +95,12 @@ describe("CommandMenu", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => docs }))
     render(<CommandMenu open onOpenChange={vi.fn()} onNavigate={onNavigate} />)
 
-    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")).toHaveLength(3))
-    fireEvent.change(screen.getByRole("combobox", { name: "状态" }), { target: { value: "stable" } })
-    fireEvent.keyDown(window, { key: "ArrowDown" })
-    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")[1]).toHaveAttribute("aria-selected", "true"))
-    fireEvent.keyDown(window, { key: "Enter" })
+    await waitFor(() => expect(within(screen.getByRole("listbox", { name: "搜索结果" })).getAllByRole("option")).toHaveLength(3))
+    const input = screen.getByRole("combobox", { name: "搜索资产" })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
+    fireEvent.keyDown(input, { key: "ArrowDown" })
+    await waitFor(() => expect(within(screen.getByRole("listbox", { name: "搜索结果" })).getAllByRole("option")[2]).toHaveAttribute("aria-selected", "true"))
+    fireEvent.keyDown(input, { key: "Enter" })
 
     expect(onNavigate).toHaveBeenCalledWith("/items/button-group/")
   })
@@ -115,7 +118,7 @@ describe("CommandMenu", () => {
     view.rerender(<CommandMenu open onOpenChange={onOpenChange} />)
 
     await waitFor(() => expect(screen.queryByText("搜索索引加载失败，请稍后重试。")).not.toBeInTheDocument())
-    await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option")).toHaveLength(3))
+    await waitFor(() => expect(within(screen.getByRole("listbox", { name: "搜索结果" })).getAllByRole("option")).toHaveLength(3))
     expect(fetchSearchIndex).toHaveBeenCalledTimes(2)
   })
 })

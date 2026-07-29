@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright"
 test("searches, previews and copies an internal component", async ({ page }) => {
   await page.goto("/")
   await page.getByRole("button", { name: "搜索资产…" }).click()
-  await page.getByRole("textbox", { name: "搜索资产" }).fill("button")
+  await page.getByRole("combobox", { name: "搜索资产" }).fill("button")
   await page.getByRole("option", { name: "Button" }).click()
   await expect(page).toHaveURL(/\/items\/button\/$/)
   await expect(page.getByTitle("Button preview")).toBeVisible()
