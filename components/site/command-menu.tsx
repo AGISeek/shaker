@@ -75,14 +75,18 @@ export function CommandMenu({ open, onOpenChange, onNavigate = navigateToAsset }
         <DialogTitle className="sr-only">搜索资产</DialogTitle>
         <Command shouldFilter={false} label="搜索资产">
           <CommandInput placeholder="搜索组件、区块或模板" value={query} onValueChange={setQuery} />
-          <div className="flex gap-2 border-b px-3 py-2" aria-label="筛选资产">
+          <div role="group" className="flex gap-2 border-b px-3 py-2" aria-label="筛选资产">
             <FilterSelect label="类型" placeholder="全部类型" values={types} value={filters.type} onChange={(type) => setFilters((current) => ({ ...current, type }))} />
             <FilterSelect label="分类" placeholder="全部分类" values={categories} value={filters.category} onChange={(category) => setFilters((current) => ({ ...current, category }))} />
             <FilterSelect label="状态" placeholder="全部状态" values={statuses} value={filters.status} onChange={(status) => setFilters((current) => ({ ...current, status: status as SearchDocument["status"] | undefined }))} />
           </div>
+          {loadError || !hasLoaded ? (
+            <div className="m-3 text-sm text-muted-foreground">
+              {loadError ? <p>搜索索引加载失败，请稍后重试。</p> : null}
+              {!loadError && !hasLoaded ? <p>正在加载资产…</p> : null}
+            </div>
+          ) : null}
           <CommandList label="搜索结果">
-            {loadError ? <p className="m-3 text-sm text-muted-foreground">搜索索引加载失败，请稍后重试。</p> : null}
-            {!loadError && !hasLoaded ? <p className="m-3 text-sm text-muted-foreground">正在加载资产…</p> : null}
             {hasLoaded && !loadError ? (
               <>
                 <CommandEmpty>没有匹配的资产。</CommandEmpty>
