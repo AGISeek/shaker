@@ -43,3 +43,13 @@ test("switches preview modes and has no critical axe violations", async ({ page 
   const results = await new AxeBuilder({ page }).analyze()
   expect(results.violations.filter((violation) => ["critical", "serious"].includes(violation.impact ?? "")).map((violation) => violation.id)).toEqual([])
 })
+
+test("keeps the site theme isolated from preview iframes", async ({ page }) => {
+  await page.goto("/items/button/")
+  await page.getByRole("button", { name: "切换主题" }).click()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+
+  await page.goto("/items/approval-card/")
+  await expect(page.getByTitle("Approval Card preview")).toBeVisible()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+})

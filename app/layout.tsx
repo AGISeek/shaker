@@ -1,7 +1,6 @@
 import "./globals.css"
 import type { Metadata } from "next"
 import { SiteFrame } from "@/components/site/site-frame"
-import { ThemeProvider } from "@/components/site/theme-provider"
 
 export const metadata: Metadata = {
   title: "Shaker UI",
@@ -12,9 +11,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SiteFrame>{children}</SiteFrame>
-        </ThemeProvider>
+        <SiteFrame>{children}</SiteFrame>
       </body>
     </html>
   )
