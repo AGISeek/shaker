@@ -1,3 +1,3 @@
-import { generateAssets } from "../src/registry/generate.ts"
+import { generatePreviewMap } from "../src/registry/generate.ts"
 
-await generateAssets()
+await generatePreviewMap()

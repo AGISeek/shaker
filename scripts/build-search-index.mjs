@@ -1,3 +1,3 @@
-import { generateAssets } from "../src/registry/generate.ts"
+import { generateSearchIndex } from "../src/registry/generate.ts"
 
-await generateAssets()
+await generateSearchIndex()

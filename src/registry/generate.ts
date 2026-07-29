@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import { relative, resolve } from "node:path"
 import { loadCatalog } from "./catalog"
 import { toSearchDocument } from "./search-index"
+import type { InternalRegistryItem } from "./types"
 import { assertValidCatalog } from "./validate"
 
 function previewImportPath(preview: string): string {
@@ -9,7 +10,7 @@ function previewImportPath(preview: string): string {
   return path.replace(/\.(?:[cm]?[jt]sx?)$/, "")
 }
 
-function previewMapSource(items: Awaited<ReturnType<typeof loadCatalog>>): string {
+function previewMapSource(items: InternalRegistryItem[]): string {
   const entries = items
     .map(
       (item) =>
@@ -29,16 +30,35 @@ function previewMapSource(items: Awaited<ReturnType<typeof loadCatalog>>): strin
   ].join("\n")
 }
 
-export async function generateAssets(cwd = process.cwd()): Promise<void> {
+async function loadValidatedCatalog(cwd: string): Promise<InternalRegistryItem[]> {
   const items = await loadCatalog(cwd)
   await assertValidCatalog(items, cwd)
-  const sortedItems = [...items].sort((left, right) => left.name.localeCompare(right.name))
+  return [...items].sort((left, right) => left.name.localeCompare(right.name))
+}
 
+async function writePreviewMap(items: InternalRegistryItem[], cwd: string): Promise<void> {
   await mkdir(resolve(cwd, "generated"), { recursive: true })
+  await writeFile(resolve(cwd, "generated/preview-map.ts"), previewMapSource(items))
+}
+
+async function writeSearchIndex(items: InternalRegistryItem[], cwd: string): Promise<void> {
   await mkdir(resolve(cwd, "public"), { recursive: true })
-  await writeFile(resolve(cwd, "generated/preview-map.ts"), previewMapSource(sortedItems))
   await writeFile(
     resolve(cwd, "public/search-index.json"),
-    `${JSON.stringify(sortedItems.map(toSearchDocument), null, 2)}\n`,
+    `${JSON.stringify(items.map(toSearchDocument), null, 2)}\n`,
   )
+}
+
+export async function generatePreviewMap(cwd = process.cwd()): Promise<void> {
+  await writePreviewMap(await loadValidatedCatalog(cwd), cwd)
+}
+
+export async function generateSearchIndex(cwd = process.cwd()): Promise<void> {
+  await writeSearchIndex(await loadValidatedCatalog(cwd), cwd)
+}
+
+export async function generateAssets(cwd = process.cwd()): Promise<void> {
+  const items = await loadValidatedCatalog(cwd)
+  await writePreviewMap(items, cwd)
+  await writeSearchIndex(items, cwd)
 }
