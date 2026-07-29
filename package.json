@@ -7,9 +7,13 @@
     "build:site": "next build",
     "registry:generate": "tsx scripts/generate-preview-map.mjs && tsx scripts/build-search-index.mjs",
     "registry:validate": "tsx scripts/validate-registry.mjs",
+    "registry:build": "shadcn build registry/registry.json --output public/r",
+    "prebuild": "pnpm registry:validate && pnpm registry:generate && pnpm registry:build",
+    "build": "next build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:cli": "node scripts/cli-smoke.mjs"
   },
   "dependencies": {
     "next": "latest",

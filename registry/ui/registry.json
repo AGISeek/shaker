@@ -12,7 +12,8 @@
       "files": [
         {
           "path": "button/button.tsx",
-          "type": "registry:ui"
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
         }
       ],
       "meta": {
