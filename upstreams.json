@@ -1,0 +1,14 @@
+{
+  "sources": [
+    {
+      "id": "shadcn",
+      "catalog": "https://ui.shadcn.com/r/registry.json",
+      "itemTemplate": "https://ui.shadcn.com/r/{name}.json",
+      "items": ["button"],
+      "pin": { "kind": "none" },
+      "allowDigestPin": true,
+      "recursiveDependencies": true,
+      "namespace": "@shadcn"
+    }
+  ]
+}
