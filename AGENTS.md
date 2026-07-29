@@ -187,6 +187,7 @@ node scripts/package-release.mjs --ref <git-sha-or-tag>
 
 - `featured`：是否在首页精选展示。
 - `sourceDigest`：内容摘要（同步上游时填写）。
+- `sourceId`：管理该资产的上游来源 id（仅 `origin: "upstream"` 资产，由同步器写入；同步器同时在该资产目录写入 `.upstream-source` 标记文件）。
 - `replacedBy`：废弃资产的替代项名称（必须指向存在的资产，且不能指向自身）。
 
 ### 依赖约定

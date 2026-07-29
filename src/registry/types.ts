@@ -10,6 +10,8 @@ export type InternalMeta = {
   origin: "internal" | "upstream"
   sourceRef: string
   sourceDigest?: string
+  /** Upstream source id that manages this asset; set only for origin "upstream". */
+  sourceId?: string
   replacedBy?: string
 }
 
