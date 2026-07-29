@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   use: { baseURL: "http://127.0.0.1:4173" },
   webServer: {
-    command: "pnpm registry:generate && pnpm build:site && python3 -m http.server 4173 --directory out",
+    command: "pnpm serve:static out --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: !process.env.CI,
   },

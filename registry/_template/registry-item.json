@@ -1,0 +1,9 @@
+{
+  "name": "example-asset",
+  "type": "registry:ui",
+  "title": "Example Asset",
+  "description": "Replace this description.",
+  "categories": ["ui"],
+  "files": [{ "path": "example-asset/component.tsx", "type": "registry:ui", "target": "components/ui/example-asset.tsx" }],
+  "meta": { "status": "experimental", "preview": "registry/ui/example-asset/preview.tsx", "addedAt": "2026-07-29", "origin": "internal", "sourceRef": "main" }
+}

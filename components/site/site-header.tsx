@@ -13,6 +13,7 @@ const navigation = [
 
 export function SiteHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [theme, setTheme] = useState<"light" | "dark">("light")
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -24,6 +25,11 @@ export function SiteHeader() {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    return () => { delete document.documentElement.dataset.theme }
+  }, [theme])
 
   return (
     <>
@@ -40,7 +46,7 @@ export function SiteHeader() {
           </nav>
           <div className="site-actions">
             <button type="button" className="icon-button" aria-keyshortcuts="Control+K Meta+K" onClick={() => setIsSearchOpen(true)}>搜索资产… <kbd>⌘K</kbd></button>
-            <button type="button" className="icon-button" aria-label="切换主题">◐</button>
+            <button type="button" className="icon-button" aria-label="切换主题" aria-pressed={theme === "dark"} onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}>◐</button>
           </div>
         </div>
       </header>

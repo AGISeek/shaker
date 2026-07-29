@@ -13,7 +13,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:cli": "node scripts/cli-smoke.mjs"
+    "test:cli": "node scripts/cli-smoke.mjs",
+    "serve:static": "node scripts/serve-static.mjs",
+    "release:package": "node scripts/package-release.mjs",
+    "verify": "pnpm test && pnpm build && pnpm test:cli && pnpm test:e2e"
   },
   "dependencies": {
     "next": "latest",
@@ -24,6 +27,7 @@
     "zod": "latest"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "latest",
     "@tailwindcss/postcss": "latest",
     "@testing-library/jest-dom": "latest",

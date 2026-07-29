@@ -36,17 +36,17 @@ export function PreviewFrame({ name, title }: PreviewFrameProps) {
           <button className={theme === "dark" ? "is-active" : ""} onClick={() => setTheme("dark")}>Dark</button>
         </div>
         <div role="group" aria-label="预览宽度">
-          <button onClick={() => setWidth("1280")}>Desktop 1280</button>
-          <button onClick={() => setWidth("768")}>Tablet 768</button>
-          <button onClick={() => setWidth("390")}>Mobile 390</button>
+          <button onClick={() => setWidth("1280")}>Desktop</button>
+          <button onClick={() => setWidth("768")}>Tablet</button>
+          <button onClick={() => setWidth("390")}>Mobile</button>
         </div>
         <button aria-label="刷新预览" onClick={() => setRefresh((value) => value + 1)}>刷新</button>
         <a href={src} target="_blank" rel="noreferrer">新标签页</a>
         <button onClick={copyCommand}>{copied ? "已复制" : "复制命令"}</button>
       </div>
       {mode === "preview" ? (
-        <div className="preview-frame__viewport">
-          <iframe key={`${src}-${refresh}`} src={src} title={title} style={{ width: `${width}px` }} />
+        <div className="preview-frame__viewport" data-testid="preview-viewport" style={{ width: `${width}px` }}>
+          <iframe key={`${src}-${refresh}`} src={src} title={`${title} preview`} />
         </div>
       ) : <p className="preview-frame__code-hint">请在下方 Code 区域查看源码。</p>}
     </section>
