@@ -32,5 +32,6 @@ describe("example registry assets", () => {
     expect(approvalCard.files?.[0]?.content).toContain('from "@/components/ui/button"')
     expect(dashboard.registryDependencies).toEqual(["@internal/approval-card"])
     expect(dashboard.files?.[0]).toMatchObject({ target: "app/admin/page.tsx" })
+    expect(dashboard.files?.[0]?.content).toContain('from "@/components/approval-card"')
   })
 })

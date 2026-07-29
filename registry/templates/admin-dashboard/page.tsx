@@ -1,4 +1,4 @@
-import { ApprovalCard } from "../../blocks/approval-card/approval-card"
+import { ApprovalCard } from "@/components/approval-card"
 
 const metrics = [
   { label: "待处理审批", value: "12" },

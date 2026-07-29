@@ -23,6 +23,9 @@
       }
     ],
     "paths": {
+      "@/components/approval-card": [
+        "./registry/blocks/approval-card/approval-card.tsx"
+      ],
       "@/components/ui/button": [
         "./registry/ui/button/button.tsx"
       ],
