@@ -35,7 +35,7 @@ test("switches preview modes and has no critical axe violations", async ({ page 
   await page.getByRole("button", { name: "切换主题" }).click()
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark")
   await page.getByRole("button", { name: "Code" }).click()
-  await expect(page.getByText("请在下方 Code 区域查看源码。")).toBeVisible()
+  await expect(page.getByLabel("Button 预览").getByText("export function Button", { exact: false })).toBeVisible()
   await page.getByRole("button", { name: "Preview" }).click()
   await page.getByRole("button", { name: "Dark" }).click()
   await expect(page.getByTitle("Button preview")).toHaveAttribute("src", /theme=dark/)

@@ -30,7 +30,7 @@ export function AssetDetail({ item, sources }: { item: InternalRegistryItem; sou
         {item.description ? <p className="page-intro">{item.description}</p> : null}
         {item.meta.status === "deprecated" ? <p className="asset-warning"><strong>此资产已弃用</strong>。{item.meta.replacedBy ? <>请改用 <a href={`/items/${item.meta.replacedBy}/`}>{item.meta.replacedBy}</a>。</> : null}</p> : null}
       </header>
-      <section><h2>Preview</h2><PreviewFrame name={item.name} title={item.title ?? item.name} /></section>
+      <section><h2>Preview</h2><PreviewFrame name={item.name} title={item.title ?? item.name} code={sources[0]?.content} /></section>
       <section><h2>Code</h2>{sources.length ? sources.map((source) => <details key={source.path}><summary>{source.path}</summary><pre><code>{source.content}</code></pre></details>) : <p>暂无源码文件。</p>}</section>
       <section><h2>Installation</h2><div className="install-command"><code>{command}</code><button className="button" onClick={copyCommand}>{copied ? "已复制" : "复制命令"}</button></div>{copyFailed ? <p role="alert">复制失败，请手动复制</p> : null}</section>
       <section><h2>Usage</h2><p>通过 shadcn CLI 安装后，在项目中导入该资产。</p></section>

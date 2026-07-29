@@ -2,15 +2,16 @@
 
 import { useState } from "react"
 
-type PreviewFrameProps = { name: string; title: string }
+type PreviewFrameProps = { name: string; title: string; code?: string }
 type Width = "1280" | "768" | "390"
 
-export function PreviewFrame({ name, title }: PreviewFrameProps) {
+export function PreviewFrame({ name, title, code }: PreviewFrameProps) {
   const [mode, setMode] = useState<"preview" | "code">("preview")
   const [theme, setTheme] = useState<"light" | "dark">("light")
   const [width, setWidth] = useState<Width>("1280")
   const [refresh, setRefresh] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
   const src = theme === "light" ? `/preview/${name}/` : `/preview/${name}/?theme=dark`
   const command = `pnpm dlx shadcn@latest add @internal/${name}`
 
@@ -18,9 +19,10 @@ export function PreviewFrame({ name, title }: PreviewFrameProps) {
     try {
       await navigator.clipboard.writeText(command)
       setCopied(true)
+      setCopyFailed(false)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      // The installation panel retains an accessible failure message for manual copying.
+      setCopyFailed(true)
     }
   }
 
@@ -48,7 +50,8 @@ export function PreviewFrame({ name, title }: PreviewFrameProps) {
         <div className="preview-frame__viewport" data-testid="preview-viewport" style={{ width: `${width}px` }}>
           <iframe key={`${src}-${refresh}`} src={src} title={`${title} preview`} />
         </div>
-      ) : <p className="preview-frame__code-hint">请在下方 Code 区域查看源码。</p>}
+      ) : code ? <pre className="preview-frame__code"><code>{code}</code></pre> : <p className="preview-frame__code-hint">暂无源码文件。</p>}
+      {copyFailed ? <p className="preview-frame__copy-error" role="alert">复制失败，请手动复制</p> : null}
     </section>
   )
 }
