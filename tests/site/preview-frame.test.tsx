@@ -36,4 +36,24 @@ describe("PreviewFrame", () => {
 
     await waitFor(() => expect(within(container).getByRole("alert")).toHaveTextContent("复制失败，请手动复制"))
   })
+
+  it("copies the full installation command and clears an earlier failure", async () => {
+    const writeText = vi.fn()
+      .mockRejectedValueOnce(new Error("denied"))
+      .mockResolvedValueOnce(undefined)
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    })
+    const { container } = render(<PreviewFrame name="button" title="Button" />)
+    const copyButton = within(container).getByRole("button", { name: "复制命令" })
+
+    fireEvent.click(copyButton)
+    await waitFor(() => expect(within(container).getByRole("alert")).toBeInTheDocument())
+
+    fireEvent.click(copyButton)
+    await waitFor(() => expect(writeText).toHaveBeenLastCalledWith("pnpm dlx shadcn@latest add @internal/button"))
+    expect(within(container).getByRole("button", { name: "已复制" })).toBeInTheDocument()
+    expect(within(container).queryByRole("alert")).not.toBeInTheDocument()
+  })
 })
