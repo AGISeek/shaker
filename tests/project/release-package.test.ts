@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process"
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
@@ -15,12 +15,11 @@ async function makeOutput() {
   temporaryDirectories.push(directory)
   for (const file of required) {
     const path = join(directory, "out", file)
-    await cp(join(process.cwd(), "package.json"), path, { errorOnExist: false }).catch(async () => {
-      const { mkdir } = await import("node:fs/promises")
-      await mkdir(join(path, ".."), { recursive: true })
-      await writeFile(path, "{}")
-    })
+    await mkdir(join(path, ".."), { recursive: true })
+    await writeFile(path, `required:${file}`)
   }
+  await mkdir(join(directory, "out/assets"), { recursive: true })
+  await writeFile(join(directory, "out/assets/brand.txt"), "unchanged static asset")
   return directory
 }
 
@@ -31,13 +30,15 @@ describe("release package", () => {
     const directory = await makeOutput()
     await rm(join(directory, "out/r/button.json"))
     await expect(run("node", [script, "--ref", "missing-output"], { cwd: directory })).rejects.toMatchObject({ stderr: expect.stringContaining("Missing required output") })
-    await expect(readFile(join(directory, "dist/missing-output/release.json"), "utf8")).rejects.toMatchObject({ code: "ENOENT" })
+    await expect(access(join(directory, "dist/missing-output"))).rejects.toMatchObject({ code: "ENOENT" })
   })
 
   it("copies complete output exactly once into a version directory", async () => {
     const directory = await makeOutput()
     await run("node", [script, "--ref", "test-release"], { cwd: directory })
     expect(JSON.parse(await readFile(join(directory, "dist/test-release/release.json"), "utf8"))).toMatchObject({ ref: "test-release" })
+    await expect(readFile(join(directory, "dist/test-release/r/admin-dashboard.json"), "utf8")).resolves.toBe("required:r/admin-dashboard.json")
+    await expect(readFile(join(directory, "dist/test-release/assets/brand.txt"), "utf8")).resolves.toBe("unchanged static asset")
     await expect(run("node", [script, "--ref", "test-release"], { cwd: directory })).rejects.toMatchObject({ stderr: expect.stringContaining("already exists") })
   })
 })
