@@ -52,7 +52,7 @@ function isAllowedRemoteUrl(value: string): boolean {
   return url.protocol === "http:" && url.hostname === "127.0.0.1"
 }
 
-function validateSources(sources: UpstreamSource[]): void {
+function validateSources(sources: UpstreamSource[], configPath: string): void {
   const issues: string[] = []
   const seenIds = new Set<string>()
   const itemOwners = new Map<string, string>()
@@ -99,7 +99,7 @@ function validateSources(sources: UpstreamSource[]): void {
   }
 
   if (issues.length > 0) {
-    throw new Error(`Invalid upstream config:\n${issues.join("\n")}`)
+    throw new Error(`Invalid upstream config at ${configPath}:\n${issues.join("\n")}`)
   }
 }
 
@@ -118,11 +118,11 @@ export async function loadUpstreamConfig(path?: string): Promise<UpstreamConfig>
 
   const result = configSchema.safeParse(parsed)
   if (!result.success) {
-    throw new Error(`Invalid upstream config at ${configPath}:\n${result.error.message}`)
+    throw new Error(`Invalid upstream config at ${configPath}:\n${z.prettifyError(result.error)}`)
   }
 
   const config: UpstreamConfig = result.data
-  validateSources(config.sources)
+  validateSources(config.sources, configPath)
   return config
 }
 

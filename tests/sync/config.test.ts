@@ -156,6 +156,30 @@ describe("loadUpstreamConfig", () => {
     )
   })
 
+  it("accepts a git-pinned source with digest pinning disabled", async () => {
+    await writeFixture({
+      sources: [
+        source({ pin: { kind: "git", ref: "v2.0.0" }, allowDigestPin: false }),
+      ],
+    })
+
+    const config = await loadUpstreamConfig(fixturePath)
+
+    expect(config.sources[0].pin).toEqual({ kind: "git", ref: "v2.0.0" })
+  })
+
+  it("accepts a version-pinned source with digest pinning disabled", async () => {
+    await writeFixture({
+      sources: [
+        source({ pin: { kind: "version", version: "1.2.3" }, allowDigestPin: false }),
+      ],
+    })
+
+    const config = await loadUpstreamConfig(fixturePath)
+
+    expect(config.sources[0].pin).toEqual({ kind: "version", version: "1.2.3" })
+  })
+
   it("rejects malformed JSON", async () => {
     await writeFile(fixturePath, "{ not json")
 
