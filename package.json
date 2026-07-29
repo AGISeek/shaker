@@ -2,7 +2,7 @@
   "name": "internal-shadcn-registry",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@10.13.1",
   "scripts": {
     "build:site": "next build",
     "registry:generate": "tsx scripts/generate-preview-map.mjs && tsx scripts/build-search-index.mjs",
