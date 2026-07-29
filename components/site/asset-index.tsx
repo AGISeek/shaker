@@ -9,10 +9,10 @@ type AssetIndexProps = {
 
 function AssetLink({ item, labelSuffix }: { item: InternalRegistryItem; labelSuffix?: string }) {
   return (
-    <a className="asset-link" href={withBasePath(`/items/${item.name}/`)} aria-label={`${item.title ?? item.name}${labelSuffix ?? ""}`}>
+    <a className="group flex items-center justify-between gap-4 border-b py-4" href={withBasePath(`/items/${item.name}/`)} aria-label={`${item.title ?? item.name}${labelSuffix ?? ""}`}>
       <span>
-        <strong>{item.title ?? item.name}</strong>
-        <small>{item.description}</small>
+        <strong className="block text-base font-semibold group-hover:underline">{item.title ?? item.name}</strong>
+        <small className="mt-1 block text-sm text-muted-foreground">{item.description}</small>
       </span>
       <span aria-hidden="true">→</span>
     </a>
@@ -26,17 +26,17 @@ export function AssetIndex({ title, description, items }: AssetIndexProps) {
   const alphabetical = [...items].sort((left, right) => left.name.localeCompare(right.name))
 
   return (
-    <section className="asset-index">
-      <p className="eyebrow">资产目录</p>
-      <h1>{title}</h1>
-      <p className="page-intro">{description}</p>
-      <section aria-labelledby="recent-assets">
-        <h2 id="recent-assets">最近新增</h2>
-        <div className="asset-list">{recentlyAdded.map((item) => <AssetLink key={item.name} item={item} labelSuffix="，最近新增" />)}</div>
+    <section>
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">资产目录</p>
+      <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+      <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
+      <section className="mt-12" aria-labelledby="recent-assets">
+        <h2 id="recent-assets" className="text-xl font-semibold tracking-tight">最近新增</h2>
+        <div className="border-t">{recentlyAdded.map((item) => <AssetLink key={item.name} item={item} labelSuffix="，最近新增" />)}</div>
       </section>
-      <section aria-labelledby="all-assets">
-        <h2 id="all-assets">全部组件</h2>
-        <div className="asset-list">{alphabetical.map((item) => <AssetLink key={item.name} item={item} />)}</div>
+      <section className="mt-12" aria-labelledby="all-assets">
+        <h2 id="all-assets" className="text-xl font-semibold tracking-tight">全部组件</h2>
+        <div className="border-t">{alphabetical.map((item) => <AssetLink key={item.name} item={item} />)}</div>
       </section>
     </section>
   )
