@@ -40,6 +40,9 @@ test("switches preview modes and has no critical axe violations", async ({ page 
   await page.getByRole("button", { name: "Dark" }).click()
   await expect(page.getByTitle("Button preview")).toHaveAttribute("src", /theme=dark/)
 
+  const darkPreview = page.frameLocator("iframe[title='Button preview']")
+  await expect(darkPreview.getByRole("button", { name: "Default" })).toBeVisible()
+
   const results = await new AxeBuilder({ page }).analyze()
   expect(results.violations.filter((violation) => ["critical", "serious"].includes(violation.impact ?? "")).map((violation) => violation.id)).toEqual([])
 })

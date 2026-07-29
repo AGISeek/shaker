@@ -5,7 +5,7 @@ export default function ButtonPreview() {
     <div>
       <Button>Default</Button>
       <Button className="bg-secondary">Secondary</Button>
-      <Button className="bg-destructive">Destructive</Button>
+      <Button className="bg-red-600 text-white">Destructive</Button>
     </div>
   )
 }
