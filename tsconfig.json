@@ -23,6 +23,8 @@
       }
     ],
     "paths": {
+      // Consumer-style specifiers used inside registry asset sources, mapped to
+      // their in-repo files for typechecking. Site shadcn components use `@/ui/*`.
       "@/components/approval-card": [
         "./registry/blocks/approval-card/approval-card.tsx"
       ],

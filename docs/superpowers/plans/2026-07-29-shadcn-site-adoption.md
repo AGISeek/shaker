@@ -250,8 +250,8 @@ Expected: 4 个测试 PASS（当前实现）。
 
 import { useState } from "react"
 import { Check, Copy, ExternalLink, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Button } from "@/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/ui/toggle-group"
 import { withBasePath } from "@/src/base-path"
 
 type PreviewFrameProps = { name: string; title: string; code?: string }
@@ -442,15 +442,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+} from "@/ui/command"
+import { Dialog, DialogContent, DialogTitle } from "@/ui/dialog"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/ui/select"
 import { rankSearch, type SearchFilters } from "@/src/registry/search"
 import type { SearchDocument } from "@/src/registry/search-index"
 import { withBasePath } from "@/src/base-path"
@@ -611,9 +611,9 @@ Expected: 2 个测试 PASS。
 "use client"
 
 import { useState } from "react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/ui/alert"
+import { Badge } from "@/ui/badge"
+import { Button } from "@/ui/button"
 import type { ItemSource } from "@/src/registry/source"
 import type { InternalRegistryItem } from "@/src/registry/types"
 import { withBasePath } from "@/src/base-path"
@@ -783,7 +783,7 @@ export function AssetIndex({ title, description, items }: AssetIndexProps) {
 
 ```tsx
 import Link from "next/link"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/ui/card"
 import type { InternalRegistryItem } from "@/src/registry/types"
 
 type GroupedAssetIndexProps = {
@@ -834,7 +834,7 @@ export function GroupedAssetIndex({ title, description, items }: GroupedAssetInd
 
 ```tsx
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/ui/button"
 import { loadCatalog } from "@/src/registry/catalog"
 
 export default async function Home() {
@@ -916,7 +916,7 @@ git commit -m "refactor: rebuild asset directories and home with shadcn card and
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/ui/button"
 import { CommandMenu } from "./command-menu"
 
 const navigation = [
@@ -1057,7 +1057,7 @@ export function DocsShell({ navigation, toc, children }: DocsShellProps) {
 `preview-error-boundary.tsx` 的 fallback 改用 Button（其余不动）：
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "@/ui/button"
 // ...
 return (
   <div className="p-8" role="alert">

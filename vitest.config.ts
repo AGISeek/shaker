@@ -4,6 +4,8 @@ import { configDefaults, defineConfig } from "vitest/config"
 export default defineConfig({
   resolve: {
     alias: {
+      "@/components/ui/button": path.resolve(__dirname, "registry/ui/button/button.tsx"),
+      "@/components/approval-card": path.resolve(__dirname, "registry/blocks/approval-card/approval-card.tsx"),
       "@/ui": path.resolve(__dirname, "components/ui"),
       "@": path.resolve(__dirname, "."),
     },
