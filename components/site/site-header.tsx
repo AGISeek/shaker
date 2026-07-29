@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { Button } from "@/ui/button"
 import { CommandMenu } from "./command-menu"
 
 const navigation = [
@@ -33,20 +34,22 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="site-header__inner">
-          <Link className="site-brand" href="/">
-            <span className="site-brand__mark" aria-hidden="true">S</span>
+      <header className="site-header border-b">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-5">
+          <Link className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold tracking-tight" href="/">
+            <span className="flex h-5 w-5 items-center justify-center rounded bg-primary text-xs text-primary-foreground" aria-hidden="true">S</span>
             Shaker UI
           </Link>
-          <nav className="site-nav" aria-label="主导航">
+          <nav className="hidden gap-5 text-sm text-muted-foreground md:flex" aria-label="主导航">
             {navigation.map((item) => (
-              <Link key={item.href} href={item.href}>{item.label}</Link>
+              <Link key={item.href} href={item.href} className="transition-colors hover:text-foreground">{item.label}</Link>
             ))}
           </nav>
-          <div className="site-actions">
-            <button type="button" className="icon-button" aria-keyshortcuts="Control+K Meta+K" onClick={() => setIsSearchOpen(true)}>搜索资产… <kbd>⌘K</kbd></button>
-            <button type="button" className="icon-button" aria-label="切换主题" aria-pressed={theme === "dark"} onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}>◐</button>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" aria-keyshortcuts="Control+K Meta+K" onClick={() => setIsSearchOpen(true)}>
+              搜索资产… <kbd className="ml-1 text-xs text-muted-foreground">⌘K</kbd>
+            </Button>
+            <Button variant="outline" size="sm" aria-label="切换主题" aria-pressed={theme === "dark"} onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}>◐</Button>
           </div>
         </div>
       </header>

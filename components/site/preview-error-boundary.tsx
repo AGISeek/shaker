@@ -1,6 +1,7 @@
 "use client"
 
 import { Component, type ErrorInfo, type ReactNode } from "react"
+import { Button } from "@/ui/button"
 
 type PreviewErrorBoundaryProps = { children: ReactNode }
 type PreviewErrorBoundaryState = { hasError: boolean }
@@ -17,9 +18,9 @@ export class PreviewErrorBoundary extends Component<PreviewErrorBoundaryProps, P
   render() {
     if (this.state.hasError) {
       return (
-        <div className="preview-error" role="alert">
+        <div className="p-8" role="alert">
           <p>预览加载失败</p>
-          <button className="button" onClick={() => window.location.reload()}>重新加载预览</button>
+          <Button className="mt-2" variant="outline" size="sm" onClick={() => window.location.reload()}>重新加载预览</Button>
         </div>
       )
     }

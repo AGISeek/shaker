@@ -12,7 +12,7 @@ export function SiteFrame({ children }: { children: ReactNode }) {
   return (
     <>
       <SiteHeader />
-      <main className="site-main">{children}</main>
+      <main className="site-main mx-auto min-h-[calc(100vh-8.5rem)] max-w-[86rem] px-5 pb-20 pt-14">{children}</main>
       <SiteFooter />
     </>
   )
