@@ -1,6 +1,6 @@
 import type { NextConfig } from "next"
 
-const basePath = process.env.GITHUB_ACTIONS ? "/shaker" : ""
+const basePath = process.env.DEPLOY_BASE_PATH || ""
 
 const config: NextConfig = {
   output: "export",

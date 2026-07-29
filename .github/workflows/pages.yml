@@ -27,6 +27,7 @@ jobs:
       - run: pnpm build
         env:
           NEXT_PUBLIC_BUILD_REF: ${{ github.sha }}
+          DEPLOY_BASE_PATH: /shaker
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
