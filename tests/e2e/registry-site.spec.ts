@@ -33,7 +33,7 @@ test("previews blocks and templates in a new tab", async ({ page, context }) => 
 test("switches preview modes and has no critical axe violations", async ({ page }) => {
   await page.goto("/items/button/")
   await page.getByRole("button", { name: "切换主题" }).click()
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark")
+  await expect(page.locator("html")).toHaveClass(/dark/)
   await page.getByRole("button", { name: "Code" }).click()
   await expect(page.getByLabel("Button 预览").getByText("export function Button", { exact: false })).toBeVisible()
   await page.getByRole("button", { name: "Preview" }).click()

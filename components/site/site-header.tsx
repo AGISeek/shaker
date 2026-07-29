@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
+import { Moon, Sun } from "lucide-react"
 import { Button } from "@/ui/button"
 import { CommandMenu } from "./command-menu"
 
@@ -14,7 +16,9 @@ const navigation = [
 
 export function SiteHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [theme, setTheme] = useState<"light" | "dark">("light")
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -26,11 +30,6 @@ export function SiteHeader() {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    return () => { delete document.documentElement.dataset.theme }
-  }, [theme])
 
   return (
     <>
@@ -49,7 +48,9 @@ export function SiteHeader() {
             <Button variant="outline" size="sm" aria-keyshortcuts="Control+K Meta+K" onClick={() => setIsSearchOpen(true)}>
               搜索资产… <kbd className="ml-1 text-xs text-muted-foreground">⌘K</kbd>
             </Button>
-            <Button variant="outline" size="sm" aria-label="切换主题" aria-pressed={theme === "dark"} onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}>◐</Button>
+            <Button variant="outline" size="icon" aria-label="切换主题" aria-pressed={mounted && resolvedTheme === "dark"} onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
+              {mounted && resolvedTheme === "dark" ? <Sun /> : <Moon />}
+            </Button>
           </div>
         </div>
       </header>
