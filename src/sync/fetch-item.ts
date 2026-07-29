@@ -51,7 +51,16 @@ export async function fetchRegistryItem(
 ): Promise<FetchedItem> {
   const url = resolveItemUrl(source, name)
 
-  const response = await fetcher(url, { headers: { Accept: "application/json" } })
+  let response: Response
+  try {
+    response = await fetcher(url, { headers: { Accept: "application/json" } })
+  } catch (error) {
+    const wrapped = new Error(
+      `Upstream source "${source.id}" request to ${url} failed (${(error as Error).message})`,
+    )
+    ;(wrapped as Error & { cause?: unknown }).cause = error
+    throw wrapped
+  }
   if (!response.ok) {
     throw new UpstreamFetchError(source.id, url, response.status)
   }

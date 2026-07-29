@@ -75,6 +75,16 @@ describe("fetchRegistryItem", () => {
     expect(second.digest).toBe(first.digest)
   })
 
+  it("pins the fixture digest to a golden value", async () => {
+    const { fetcher } = jsonFetcher(await loadFixture())
+
+    const result = await fetchRegistryItem(source(), "button", fetcher)
+
+    expect(result.digest).toBe(
+      "sha256:938ae16d6935249df469244a05f7fca31782c214e5bfbce0b11c8a65d0a5ade5",
+    )
+  })
+
   it("uses the git ref as sourceRef when pinned to git", async () => {
     const { fetcher } = jsonFetcher(await loadFixture())
 
@@ -120,6 +130,20 @@ describe("fetchRegistryItem", () => {
     expect(error.message).toContain("https://example.com/r/button.json")
   })
 
+  it("wraps fetcher rejections with source id and url context", async () => {
+    const cause = new Error("connection refused")
+    const fetcher = (async () => {
+      throw cause
+    }) as typeof fetch
+
+    const error = await fetchRegistryItem(source(), "button", fetcher).catch((e) => e)
+
+    expect(error.message).toContain("shadcn")
+    expect(error.message).toContain("https://example.com/r/button.json")
+    expect(error.message).toContain("connection refused")
+    expect(error.cause).toBe(cause)
+  })
+
   it("throws an error naming the source and url on non-JSON responses", async () => {
     const { fetcher } = jsonFetcher("<html>oops</html>", { contentType: "text/html" })
 
@@ -158,6 +182,10 @@ describe("canonicalizeJson", () => {
 
   it("preserves array order", () => {
     expect(canonicalizeJson({ list: [3, 1, 2] })).toBe('{"list":[3,1,2]}')
+  })
+
+  it("sorts keys of objects nested inside arrays", () => {
+    expect(canonicalizeJson({ list: [{ b: 1, a: 2 }] })).toBe('{"list":[{"a":2,"b":1}]}')
   })
 
   it("handles primitives and null", () => {
