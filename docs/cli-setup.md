@@ -14,7 +14,7 @@
 
 ```bash
 pnpm dlx shadcn@latest list @internal
-pnpm dlx shadcn@latest search @internal button
+pnpm dlx shadcn@latest search @internal --query button
 pnpm dlx shadcn@latest view @internal/button
 pnpm dlx shadcn@latest add @internal/button
 ```
