@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "external-dependency",
+  "type": "registry:block",
+  "title": "External Dependency",
+  "description": "A block that depends on an item served from a non-allowlisted URL.",
+  "registryDependencies": ["https://evil.example/r/x.json"],
+  "files": [
+    {
+      "path": "blocks/external-dependency.tsx",
+      "type": "registry:block",
+      "target": "components/external-dependency.tsx",
+      "content": "export function ExternalDependency() {\n  return null\n}\n"
+    }
+  ]
+}

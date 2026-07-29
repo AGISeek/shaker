@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "approval-card",
+  "type": "registry:block",
+  "title": "Approval Card",
+  "description": "An interactive business card for approval workflows.",
+  "registryDependencies": ["button"],
+  "files": [
+    {
+      "path": "blocks/approval-card.tsx",
+      "type": "registry:block",
+      "target": "components/approval-card.tsx",
+      "content": "import { Button } from \"@/components/ui/button\"\n\nexport function ApprovalCard() {\n  return <Button>Approve</Button>\n}\n"
+    }
+  ]
+}
