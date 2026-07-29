@@ -59,6 +59,33 @@ describe("findDependencyCycle", () => {
 })
 
 describe("validateCatalog", () => {
+  it("reports missing internal metadata without throwing", async () => {
+    const issues = await validateCatalog([item("a", { meta: undefined as never })], fixtureRoot)
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "meta",
+      message: "Metadata is required",
+    })
+  })
+
+  it("requires metadata origin and source reference", async () => {
+    const issues = await validateCatalog(
+      [item("a", { meta: { ...item("a").meta, origin: " " as "internal", sourceRef: " " } })],
+      fixtureRoot,
+    )
+    expect(issues).toContainEqual({ item: "a", field: "meta.origin", message: "Origin is required" })
+    expect(issues).toContainEqual({ item: "a", field: "meta.sourceRef", message: "Source reference is required" })
+  })
+
+  it("rejects unsupported registry item types", async () => {
+    const issues = await validateCatalog([item("a", { type: "registry:lib" as "registry:ui" })], fixtureRoot)
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "type",
+      message: "Unsupported registry type: registry:lib",
+    })
+  })
+
   it("reports duplicate names", async () => {
     const issues = await validateCatalog([item("a"), item("a")], fixtureRoot)
     expect(issues).toContainEqual({
@@ -117,6 +144,28 @@ describe("validateCatalog", () => {
       item: "a",
       field: "files[].path",
       message: "File does not exist: registry/ui/missing.tsx",
+    })
+  })
+
+  it("rejects unsafe consumer installation targets", async () => {
+    const issues = await validateCatalog(
+      [item("a", {
+        files: [
+          { path: "registry/ui/a.tsx", type: "registry:ui", target: "../components/a.tsx" },
+          { path: "registry/ui/a.tsx", type: "registry:ui", target: "/components/a.tsx" },
+        ],
+      })],
+      fixtureRoot,
+    )
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "files[].target",
+      message: "File target is outside the consumer installation root: ../components/a.tsx",
+    })
+    expect(issues).toContainEqual({
+      item: "a",
+      field: "files[].target",
+      message: "File target is outside the consumer installation root: /components/a.tsx",
     })
   })
 

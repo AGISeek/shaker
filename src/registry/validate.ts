@@ -1,5 +1,5 @@
 import { realpath } from "node:fs/promises"
-import { resolve, sep } from "node:path"
+import { resolve, sep, win32 } from "node:path"
 import { findDependencyCycle, internalDependencyNames } from "./dependency-graph"
 import type { InternalRegistryItem } from "./types"
 
@@ -10,6 +10,12 @@ export type ValidationIssue = {
 }
 
 const allowedStatuses = new Set(["experimental", "stable", "deprecated"])
+const supportedRegistryTypes = new Set([
+  "registry:ui",
+  "registry:component",
+  "registry:block",
+  "registry:page",
+])
 
 export class RegistryValidationError extends Error {
   constructor(public readonly issues: ValidationIssue[]) {
@@ -31,6 +37,18 @@ function isValidDate(value: string): boolean {
 
 function isWithin(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}${sep}`)
+}
+
+function isSafeConsumerTarget(target: string): boolean {
+  const normalizedTarget = target.replaceAll("\\", "/")
+  const installationRoot = resolve(sep, "registry-installation-root")
+  return !win32.isAbsolute(target)
+    && !normalizedTarget.startsWith(sep)
+    && isWithin(installationRoot, resolve(installationRoot, normalizedTarget))
+}
+
+function hasMetadata(item: InternalRegistryItem): boolean {
+  return typeof item.meta === "object" && item.meta !== null
 }
 
 function sourcePaths(cwd: string, sourcePath: string): string[] {
@@ -73,12 +91,33 @@ export async function validateCatalog(
   }
 
   for (const item of items) {
+    if (!hasMetadata(item)) {
+      issues.push({ item: item.name, field: "meta", message: "Metadata is required" })
+      continue
+    }
+    if (!item.meta.origin?.trim()) {
+      issues.push({ item: item.name, field: "meta.origin", message: "Origin is required" })
+    }
+    if (!item.meta.sourceRef?.trim()) {
+      issues.push({ item: item.name, field: "meta.sourceRef", message: "Source reference is required" })
+    }
+  }
+
+  for (const item of items) {
+    if (!supportedRegistryTypes.has(item.type)) {
+      issues.push({ item: item.name, field: "type", message: `Unsupported registry type: ${item.type}` })
+    }
+  }
+
+  for (const item of items) {
+    if (!hasMetadata(item)) continue
     if (!allowedStatuses.has(item.meta.status)) {
       issues.push({ item: item.name, field: "meta.status", message: `Invalid status: ${item.meta.status}` })
     }
   }
 
   for (const item of items) {
+    if (!hasMetadata(item)) continue
     if (!isValidDate(item.meta.addedAt)) {
       issues.push({ item: item.name, field: "meta.addedAt", message: `Invalid date: ${item.meta.addedAt}` })
     }
@@ -86,6 +125,7 @@ export async function validateCatalog(
 
   const previews = new Map<string, string | null>()
   for (const item of items) {
+    if (!hasMetadata(item)) continue
     const preview = await existingSourcePath(root, item.meta.preview)
     previews.set(item.name, preview.kind === "found" ? preview.path : null)
     if (preview.kind === "outside") {
@@ -107,6 +147,13 @@ export async function validateCatalog(
   for (const item of items) {
     const filePaths = new Set<string>()
     for (const file of item.files ?? []) {
+      if (file.target !== undefined && (typeof file.target !== "string" || !isSafeConsumerTarget(file.target))) {
+        issues.push({
+          item: item.name,
+          field: "files[].target",
+          message: `File target is outside the consumer installation root: ${String(file.target)}`,
+        })
+      }
       const sourcePath = await existingSourcePath(root, file.path)
       if (sourcePath.kind === "outside") {
         issues.push({
@@ -126,6 +173,7 @@ export async function validateCatalog(
   }
 
   for (const item of items) {
+    if (!hasMetadata(item)) continue
     const preview = previews.get(item.name)
     if (preview && filesByItem.get(item.name)?.has(preview)) {
       issues.push({ item: item.name, field: "meta.preview", message: "Preview must not be included in files" })
@@ -154,6 +202,7 @@ export async function validateCatalog(
   }
 
   for (const item of items) {
+    if (!hasMetadata(item)) continue
     if (item.meta.status !== "deprecated") continue
     const replacement = item.meta.replacedBy
     if (replacement === item.name) {
