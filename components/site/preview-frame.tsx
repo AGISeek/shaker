@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { Check, Copy, ExternalLink, RefreshCw } from "lucide-react"
+import { Button } from "@/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/ui/toggle-group"
 import { withBasePath } from "@/src/base-path"
 
 type PreviewFrameProps = { name: string; title: string; code?: string }
@@ -28,31 +31,44 @@ export function PreviewFrame({ name, title, code }: PreviewFrameProps) {
   }
 
   return (
-    <section className="preview-frame" aria-label={`${title} 预览`}>
-      <div className="preview-frame__toolbar">
-        <div role="group" aria-label="内容模式">
-          <button className={mode === "preview" ? "is-active" : ""} onClick={() => setMode("preview")}>Preview</button>
-          <button className={mode === "code" ? "is-active" : ""} onClick={() => setMode("code")}>Code</button>
-        </div>
-        <div role="group" aria-label="主题">
-          <button className={theme === "light" ? "is-active" : ""} onClick={() => setTheme("light")}>Light</button>
-          <button className={theme === "dark" ? "is-active" : ""} onClick={() => setTheme("dark")}>Dark</button>
-        </div>
-        <div role="group" aria-label="预览宽度">
-          <button onClick={() => setWidth("1280")}>Desktop</button>
-          <button onClick={() => setWidth("768")}>Tablet</button>
-          <button onClick={() => setWidth("390")}>Mobile</button>
-        </div>
-        <button aria-label="刷新预览" onClick={() => setRefresh((value) => value + 1)}>刷新</button>
-        <a href={src} target="_blank" rel="noreferrer">新标签页</a>
-        <button onClick={copyCommand}>{copied ? "已复制" : "复制命令"}</button>
+    <section className="rounded-md border" aria-label={`${title} 预览`}>
+      <div className="flex flex-wrap items-center gap-2 border-b p-2">
+        {/* Radix type="single" 渲染 radio 语义，这里用 multiple 模拟单选以保留 button 角色 */}
+        <ToggleGroup type="multiple" value={[mode]} onValueChange={(values) => { const next = values.at(-1); if (next) setMode(next as "preview" | "code") }} aria-label="内容模式" size="sm">
+          <ToggleGroupItem value="preview">Preview</ToggleGroupItem>
+          <ToggleGroupItem value="code">Code</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="multiple" value={[theme]} onValueChange={(values) => { const next = values.at(-1); if (next) setTheme(next as "light" | "dark") }} aria-label="主题" size="sm">
+          <ToggleGroupItem value="light">Light</ToggleGroupItem>
+          <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="multiple" value={[width]} onValueChange={(values) => { const next = values.at(-1); if (next) setWidth(next as Width) }} aria-label="预览宽度" size="sm">
+          <ToggleGroupItem value="1280">Desktop</ToggleGroupItem>
+          <ToggleGroupItem value="768">Tablet</ToggleGroupItem>
+          <ToggleGroupItem value="390">Mobile</ToggleGroupItem>
+        </ToggleGroup>
+        <Button variant="outline" size="sm" aria-label="刷新预览" onClick={() => setRefresh((value) => value + 1)}>
+          <RefreshCw />刷新
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <a href={src} target="_blank" rel="noreferrer"><ExternalLink />新标签页</a>
+        </Button>
+        <Button variant="outline" size="sm" onClick={copyCommand}>
+          {copied ? <><Check />已复制</> : <><Copy />复制命令</>}
+        </Button>
       </div>
       {mode === "preview" ? (
-        <div className="preview-frame__viewport" data-testid="preview-viewport" style={{ width: `${width}px` }}>
-          <iframe key={`${src}-${refresh}`} src={src} title={`${title} preview`} />
+        <div className="overflow-auto bg-muted p-4">
+          <div data-testid="preview-viewport" className="mx-auto" style={{ width: `${width}px`, maxWidth: "100%" }}>
+            <iframe key={`${src}-${refresh}`} src={src} title={`${title} preview`} className="block h-96 w-full border-0 bg-background" />
+          </div>
         </div>
-      ) : code ? <pre className="preview-frame__code"><code>{code}</code></pre> : <p className="preview-frame__code-hint">暂无源码文件。</p>}
-      {copyFailed ? <p className="preview-frame__copy-error" role="alert">复制失败，请手动复制</p> : null}
+      ) : code ? (
+        <pre className="overflow-x-auto p-4 text-sm"><code>{code}</code></pre>
+      ) : (
+        <p className="p-4 text-sm text-muted-foreground">暂无源码文件。</p>
+      )}
+      {copyFailed ? <p className="m-2 text-sm text-destructive" role="alert">复制失败，请手动复制</p> : null}
     </section>
   )
 }
