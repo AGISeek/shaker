@@ -3,8 +3,9 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-// Relative import: tsconfig maps `@/components/ui/button` to the registry example button.
-import { Button } from "./button"
+// `@/components/ui/button` is reserved by a tsconfig path mapping for the registry
+// example button; site UI components import each other via the `@/ui/*` alias.
+import { Button } from "@/ui/button"
 
 function Dialog({
   ...props

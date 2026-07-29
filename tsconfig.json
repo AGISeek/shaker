@@ -29,6 +29,9 @@
       "@/components/ui/button": [
         "./registry/ui/button/button.tsx"
       ],
+      "@/ui/*": [
+        "./components/ui/*"
+      ],
       "@/*": [
         "./*"
       ]
