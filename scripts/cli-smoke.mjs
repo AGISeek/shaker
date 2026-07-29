@@ -36,10 +36,12 @@ async function prepareConsumer(directory, namespaceUrl) {
   await writeFile(join(directory, "tsconfig.json"), '{"compilerOptions":{"baseUrl":".","paths":{"@/*":["./*"]}}}\n')
 }
 
-const server = await startStaticServer({ root: resolve(workspace, "out"), port: 0 })
-const consumer = await mkdtemp(join(tmpdir(), "internal-registry-cli-"))
+let server
+let consumer
 
 try {
+  server = await startStaticServer({ root: resolve(workspace, "out"), port: 0 })
+  consumer = await mkdtemp(join(tmpdir(), "internal-registry-cli-"))
   await prepareConsumer(consumer, `${server.origin}/r/{name}.json`)
 
   const commands = [
@@ -60,6 +62,10 @@ try {
   await stat(join(consumer, "components/ui/button.tsx"))
   console.log("shadcn CLI registry smoke test passed")
 } finally {
-  await server.close()
-  await rm(consumer, { recursive: true, force: true })
+  const cleanup = []
+  if (server) cleanup.push(server.close())
+  if (consumer) cleanup.push(rm(consumer, { recursive: true, force: true }))
+  const results = await Promise.allSettled(cleanup)
+  const failedCleanup = results.find((result) => result.status === "rejected")
+  if (failedCleanup?.status === "rejected") throw failedCleanup.reason
 }
