@@ -5,6 +5,7 @@ import { DocsShell } from "@/components/site/docs-shell"
 import { GroupedAssetIndex } from "@/components/site/grouped-asset-index"
 import type { InternalRegistryItem } from "@/src/registry/types"
 import { filterTemplateItems } from "@/app/templates/page"
+import { filterComponentItems } from "@/app/components/page"
 
 const items: InternalRegistryItem[] = [
   {
@@ -35,6 +36,12 @@ describe("AssetIndex", () => {
 })
 
 describe("template and docs indexes", () => {
+  it("keeps registry:ui and registry:component assets in the components directory", () => {
+    const component = { ...items[0], name: "field", type: "registry:component" } as InternalRegistryItem
+    const block = { ...items[0], name: "hero", type: "registry:block" } as InternalRegistryItem
+    expect(filterComponentItems([items[0], component, block])).toEqual([items[0], component])
+  })
+
   it("keeps registry:page assets in the templates directory", () => {
     const pageTemplate = { ...items[0], type: "registry:page" } as InternalRegistryItem
     expect(filterTemplateItems([items[0], pageTemplate])).toEqual([pageTemplate])
