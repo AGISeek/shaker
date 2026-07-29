@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/ui/alert"
 import { Badge } from "@/ui/badge"
 import { Button } from "@/ui/button"
@@ -48,12 +48,16 @@ export function AssetDetail({ item, sources }: { item: InternalRegistryItem; sou
       </header>
       <Section title="Preview"><PreviewFrame name={item.name} title={item.title ?? item.name} code={sources[0]?.content} /></Section>
       <Section title="Code">
-        {sources.length ? sources.map((source) => (
-          <details key={source.path} className="rounded-md border">
-            <summary className="cursor-pointer px-3 py-2 text-sm font-medium">{source.path}</summary>
-            <pre className="overflow-x-auto border-t p-4 text-sm"><code>{source.content}</code></pre>
-          </details>
-        )) : <p className="text-sm text-muted-foreground">暂无源码文件。</p>}
+        {sources.length ? (
+          <div className="space-y-3">
+            {sources.map((source) => (
+              <details key={source.path} className="rounded-md border">
+                <summary className="cursor-pointer px-3 py-2 text-sm font-medium">{source.path}</summary>
+                <pre className="overflow-x-auto border-t p-4 text-sm"><code>{source.content}</code></pre>
+              </details>
+            ))}
+          </div>
+        ) : <p className="text-sm text-muted-foreground">暂无源码文件。</p>}
       </Section>
       <Section title="Installation">
         <div className="flex items-center justify-between gap-3 rounded-md border bg-muted p-3">
@@ -76,7 +80,7 @@ export function AssetDetail({ item, sources }: { item: InternalRegistryItem; sou
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="border-t pt-6">
       <h2 className="mb-4 text-xl font-semibold tracking-tight">{title}</h2>
