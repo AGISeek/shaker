@@ -237,6 +237,25 @@ describe("createSyncPlan path safety", () => {
 
     expect(() => createSyncPlan([fetched], options())).toThrow(/duplicate/i)
   })
+
+  it("rejects upstream files that collide with the managed source marker", () => {
+    const fetched = fetchedButton({}, { files: [buttonFile({ path: "ui/.upstream-source" })] })
+
+    expect(() => createSyncPlan([fetched], options())).toThrow(/source marker/)
+  })
+
+  it.each([
+    ["parent traversal", "../../escape"],
+    ["path separator", "has/slash"],
+    ["uppercase letters", "UpperCase"],
+    ["underscores", "under_score"],
+  ])("rejects item names with %s and produces no writes", (_label, name) => {
+    const fetched = fetchedButton({}, { name })
+
+    expect(() => createSyncPlan([fetched], options())).toThrow(
+      new RegExp(`source "shadcn"[\\s\\S]*invalid item name`),
+    )
+  })
 })
 
 describe("createSyncPlan digest approval", () => {
@@ -363,6 +382,14 @@ describe("createSyncPlan writes and deletes", () => {
     )
 
     expect(plan.deletes).toEqual([])
+  })
+
+  it("refuses deletes whose normalized path escapes the registry root", () => {
+    const malicious = managedExistingItem({ name: "../evil" })
+
+    expect(() =>
+      createSyncPlan([fetchedButton()], options({ existingItems: [malicious] })),
+    ).toThrow(/outside the registry root/)
   })
 
   it("deletes the old directory when an item changes category", () => {

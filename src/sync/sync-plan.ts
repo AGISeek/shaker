@@ -1,6 +1,6 @@
 import type { InternalRegistryItem } from "../registry/types"
 import type { FetchedItem } from "./fetch-item"
-import { categoryForType, DigestApprovalRequiredError, normalizeFetchedItem } from "./normalize"
+import { categoryForType, DigestApprovalRequiredError, ITEM_NAME_PATTERN, normalizeFetchedItem, UPSTREAM_SOURCE_MARKER } from "./normalize"
 import type { NormalizedItem, SyncCategory } from "./normalize"
 
 export type PlannedWrite = { path: string; content: string }
@@ -82,6 +82,42 @@ function readCatalogBase(raw: string | undefined, category: SyncCategory): Recor
   return base
 }
 
+/** Resolves "."/".." segments and unifies separators; null if it escapes above the root. */
+function normalizePathSegments(path: string): string[] | null {
+  const segments: string[] = []
+  for (const segment of path.replaceAll("\\", "/").split("/")) {
+    if (segment === "" || segment === ".") continue
+    if (segment === "..") {
+      if (segments.length === 0) return null
+      segments.pop()
+      continue
+    }
+    segments.push(segment)
+  }
+  return segments
+}
+
+/**
+ * Verifies a planned delete resolves to exactly "<registryRoot>/<category>/<name>".
+ * The path is built from existing item metadata, so a malicious or corrupted
+ * item name must not be able to point the delete outside the registry root.
+ */
+function assertSafeDeletePath(registryRoot: string, path: string): void {
+  const rootSegments = normalizePathSegments(registryRoot)
+  const pathSegments = normalizePathSegments(path)
+  const categories: readonly string[] = ["ui", "blocks", "templates"]
+  const safe =
+    rootSegments !== null &&
+    pathSegments !== null &&
+    pathSegments.length === rootSegments.length + 2 &&
+    rootSegments.every((segment, index) => pathSegments[index] === segment) &&
+    categories.includes(pathSegments[rootSegments.length] as string) &&
+    ITEM_NAME_PATTERN.test(pathSegments[rootSegments.length + 1] as string)
+  if (!safe) {
+    throw new Error(`Refusing to plan a delete outside the registry root: ${path}`)
+  }
+}
+
 /**
  * Converts an in-memory (loadCatalog-expanded) item into the catalog-file
  * form: file paths become relative to the category directory.
@@ -122,6 +158,14 @@ export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOpti
   const seenNames = new Set<string>()
   const normalized: NormalizedItem[] = items.map((fetched) => {
     const name = fetched.item.name
+    // Item names become path segments; an unvalidated name (e.g. "../../escape"
+    // pulled in via a transitive dependency) could escape the registry root.
+    if (!ITEM_NAME_PATTERN.test(name)) {
+      throw new Error(
+        `Upstream source "${sourceId}" returned an invalid item name "${name}"; ` +
+          "names must match /^[a-z0-9][a-z0-9-]*$/",
+      )
+    }
     if (seenNames.has(name)) {
       throw new Error(`Upstream item "${name}" appears more than once in the sync batch`)
     }
@@ -169,9 +213,7 @@ export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOpti
     }
   }
   for (const path of deletes) {
-    if (!path.startsWith(`${options.registryRoot}/`)) {
-      throw new Error(`Refusing to plan a delete outside the registry root: ${path}`)
-    }
+    assertSafeDeletePath(options.registryRoot, path)
   }
 
   // Pass 2: assemble writes, skipping content that already exists unchanged.
@@ -192,7 +234,7 @@ export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOpti
       planWrite(previewPath, previewPlaceholder())
     }
     planWrite(
-      `${options.registryRoot}/${item.category}/${item.name}/.upstream-source`,
+      `${options.registryRoot}/${item.category}/${item.name}/${UPSTREAM_SOURCE_MARKER}`,
       `${sourceId}\n`,
     )
   }

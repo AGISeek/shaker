@@ -3,6 +3,12 @@ import type { FetchedItem } from "./fetch-item"
 
 export type SyncCategory = "ui" | "blocks" | "templates"
 
+/** Marker file written into every synced item directory; used by delete guards. */
+export const UPSTREAM_SOURCE_MARKER = ".upstream-source"
+
+/** shadcn naming convention for registry item names. */
+export const ITEM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/
+
 const categoryByType: Record<string, SyncCategory> = {
   "registry:ui": "ui",
   "registry:component": "ui",
@@ -71,6 +77,11 @@ export function normalizeFilePath(
   if (relative === "preview.tsx") {
     throw new Error(
       `Upstream item "${itemName}" file path "${rawPath}" conflicts with the managed preview entry`,
+    )
+  }
+  if (relative === UPSTREAM_SOURCE_MARKER) {
+    throw new Error(
+      `Upstream item "${itemName}" file path "${rawPath}" conflicts with the managed source marker`,
     )
   }
   return relative
