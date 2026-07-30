@@ -9,6 +9,21 @@ export const UPSTREAM_SOURCE_MARKER = ".upstream-source"
 /** shadcn naming convention for registry item names. */
 export const ITEM_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/
 
+/** Resolves "."/".." segments and unifies separators; null if it escapes above the root. */
+export function normalizePathSegments(path: string): string[] | null {
+  const segments: string[] = []
+  for (const segment of path.replaceAll("\\", "/").split("/")) {
+    if (segment === "" || segment === ".") continue
+    if (segment === "..") {
+      if (segments.length === 0) return null
+      segments.pop()
+      continue
+    }
+    segments.push(segment)
+  }
+  return segments
+}
+
 const categoryByType: Record<string, SyncCategory> = {
   "registry:ui": "ui",
   "registry:component": "ui",

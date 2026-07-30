@@ -1,6 +1,6 @@
 import type { InternalRegistryItem } from "../registry/types"
 import type { FetchedItem } from "./fetch-item"
-import { categoryForType, DigestApprovalRequiredError, ITEM_NAME_PATTERN, normalizeFetchedItem, UPSTREAM_SOURCE_MARKER } from "./normalize"
+import { categoryForType, DigestApprovalRequiredError, ITEM_NAME_PATTERN, normalizeFetchedItem, normalizePathSegments, UPSTREAM_SOURCE_MARKER } from "./normalize"
 import type { NormalizedItem, SyncCategory } from "./normalize"
 
 export type PlannedWrite = { path: string; content: string }
@@ -85,21 +85,6 @@ function readCatalogBase(raw: string | undefined, category: SyncCategory): Recor
   return base
 }
 
-/** Resolves "."/".." segments and unifies separators; null if it escapes above the root. */
-function normalizePathSegments(path: string): string[] | null {
-  const segments: string[] = []
-  for (const segment of path.replaceAll("\\", "/").split("/")) {
-    if (segment === "" || segment === ".") continue
-    if (segment === "..") {
-      if (segments.length === 0) return null
-      segments.pop()
-      continue
-    }
-    segments.push(segment)
-  }
-  return segments
-}
-
 /**
  * Verifies a planned delete resolves to exactly "<registryRoot>/<category>/<name>".
  * The path is built from existing item metadata, so a malicious or corrupted
@@ -144,6 +129,14 @@ function toCatalogItem(item: InternalRegistryItem, category: SyncCategory): Inte
 export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOptions): SyncPlan {
   if (items.length === 0) {
     throw new Error("createSyncPlan requires at least one fetched item")
+  }
+  // applySyncPlan only accepts relative plan paths whose first segment is
+  // "registry"; pinning registryRoot here keeps the two sides of the contract
+  // from silently drifting apart.
+  if (options.registryRoot !== "registry") {
+    throw new Error(
+      `createSyncPlan only supports registryRoot "registry", got "${options.registryRoot}"`,
+    )
   }
   const sourceId = items[0]!.sourceId
   for (const fetched of items) {

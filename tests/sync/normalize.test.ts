@@ -256,6 +256,15 @@ describe("createSyncPlan path safety", () => {
       new RegExp(`source "shadcn"[\\s\\S]*invalid item name`),
     )
   })
+
+  it.each([["nested root", "packages/registry"], ["escaping root", "../registry"], ["absolute root", "/registry"]])(
+    "rejects a registryRoot that is not the supported \"registry\" (%s)",
+    (_label, registryRoot) => {
+      expect(() => createSyncPlan([fetchedButton()], options({ registryRoot }))).toThrow(
+        /registryRoot/,
+      )
+    },
+  )
 })
 
 describe("createSyncPlan digest approval", () => {

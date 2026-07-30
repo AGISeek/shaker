@@ -8,6 +8,7 @@ import { formatSyncReport } from "@/src/sync/report"
 
 const fsControl = vi.hoisted(() => ({
   failFinalRename: false,
+  failRollbackRename: false,
   writtenPaths: [] as string[],
 }))
 
@@ -16,9 +17,14 @@ vi.mock("@/src/sync/fs", async (importOriginal) => {
   const rename: typeof actual.rename = async (oldPath, newPath) => {
     // The final swap renames the staged registry onto "<root>/registry"; the
     // rollback rename targets the same path but the flag is already consumed.
-    if (fsControl.failFinalRename && String(newPath).split("/").pop() === "registry") {
-      fsControl.failFinalRename = false
-      throw new Error("Injected rename failure")
+    if (String(newPath).split("/").pop() === "registry") {
+      if (fsControl.failFinalRename) {
+        fsControl.failFinalRename = false
+        throw new Error("Injected rename failure")
+      }
+      if (fsControl.failRollbackRename) {
+        throw new Error("Injected rollback rename failure")
+      }
     }
     return actual.rename(oldPath, newPath)
   }
@@ -45,11 +51,13 @@ async function makeRepoRoot(): Promise<string> {
 
 beforeEach(() => {
   fsControl.failFinalRename = false
+  fsControl.failRollbackRename = false
   fsControl.writtenPaths = []
 })
 
 afterEach(async () => {
   fsControl.failFinalRename = false
+  fsControl.failRollbackRename = false
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
@@ -236,6 +244,30 @@ describe("applySyncPlan", () => {
     expect(await snapshotTree(root)).toEqual(before)
     const leftovers = (await readdir(root)).filter((entry) => entry.startsWith(".upstream-"))
     expect(leftovers).toEqual([])
+  })
+
+  it("reports both errors and the backup path when the rollback rename also fails", async () => {
+    const root = await makeRepoRoot()
+    await seedStaleWidget(root)
+    fsControl.failFinalRename = true
+    fsControl.failRollbackRename = true
+
+    const error = await applySyncPlan(await happyPathPlan(root), root).then(
+      () => {
+        throw new Error("expected applySyncPlan to reject")
+      },
+      (caught: unknown) => caught as Error & { cause?: unknown },
+    )
+
+    expect(error.message).toContain("Injected rename failure")
+    expect(error.message).toContain("Injected rollback rename failure")
+    expect(error.message).toMatch(/\.upstream-backup-/)
+    expect(error.cause).toBeInstanceOf(Error)
+    expect((error.cause as Error).message).toContain("Injected rename failure")
+    // The backup holding the original tree is left in place for manual recovery.
+    const backups = (await readdir(root)).filter((entry) => entry.startsWith(".upstream-backup-"))
+    expect(backups).toHaveLength(1)
+    expect(error.message).toContain(backups[0] as string)
   })
 
   it("refuses to delete a directory without a matching source marker", async () => {

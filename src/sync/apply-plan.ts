@@ -3,28 +3,13 @@ import { dirname, join, resolve } from "node:path"
 import { loadCatalog } from "../registry/catalog"
 import { assertValidCatalog } from "../registry/validate"
 import { cp, mkdir, mkdtemp, readFile, rename, rm, stat, writeFile } from "./fs"
-import { ITEM_NAME_PATTERN, UPSTREAM_SOURCE_MARKER } from "./normalize"
+import { ITEM_NAME_PATTERN, normalizePathSegments, UPSTREAM_SOURCE_MARKER } from "./normalize"
 import type { SyncPlan } from "./sync-plan"
 
 const CATEGORIES = new Set(["ui", "blocks", "templates"])
 const REGISTRY_DIR = "registry"
 const STAGING_PREFIX = ".upstream-sync-"
 const BACKUP_PREFIX = ".upstream-backup-"
-
-/** Resolves "."/".." segments and unifies separators; null if it escapes above the root. */
-function normalizePathSegments(path: string): string[] | null {
-  const segments: string[] = []
-  for (const segment of path.replaceAll("\\", "/").split("/")) {
-    if (segment === "" || segment === ".") continue
-    if (segment === "..") {
-      if (segments.length === 0) return null
-      segments.pop()
-      continue
-    }
-    segments.push(segment)
-  }
-  return segments
-}
 
 /**
  * Verifies a planned write lands at "<registry>/<category>/<file...>" and
@@ -161,7 +146,19 @@ export async function applySyncPlan(plan: SyncPlan, root: string): Promise<void>
       await rename(join(stagingRoot, REGISTRY_DIR), registryPath)
     } catch (error) {
       // Roll back immediately: the backup still holds the original tree.
-      await rename(backupPath, registryPath)
+      try {
+        await rename(backupPath, registryPath)
+      } catch (rollbackError) {
+        // Both renames failed: the live tree may be missing or partial. Keep
+        // the original failure as cause and point at the backup that still
+        // holds the untouched registry for manual recovery.
+        throw new Error(
+          `Failed to apply the staged registry (${(error as Error).message}) and the rollback also failed ` +
+            `(${(rollbackError as Error).message}). The original registry tree is preserved at ${backupPath}; ` +
+            "restore it manually before retrying.",
+          { cause: error },
+        )
+      }
       throw error
     }
     swapped = true
