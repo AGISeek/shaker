@@ -2,8 +2,8 @@
   "sources": [
     {
       "id": "shadcn",
-      "catalog": "https://ui.shadcn.com/r/registry.json",
-      "itemTemplate": "https://ui.shadcn.com/r/{name}.json",
+      "catalog": "https://ui.shadcn.com/r/index.json",
+      "itemTemplate": "https://ui.shadcn.com/r/styles/new-york-v4/{name}.json",
       "items": ["button"],
       "pin": { "kind": "none" },
       "allowDigestPin": true,

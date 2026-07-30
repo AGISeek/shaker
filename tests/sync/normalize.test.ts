@@ -125,6 +125,37 @@ describe("createSyncPlan normalization", () => {
     })
   })
 
+  it("strips the registry style prefix from current upstream paths", () => {
+    const fetched = fetchedButton(
+      {},
+      { files: [buttonFile({ path: "registry/new-york-v4/ui/button.tsx" })] },
+    )
+    const plan = createSyncPlan([fetched], options())
+    const paths = [...writeMap(plan).keys()]
+
+    expect(writeMap(plan).get("registry/ui/button/button.tsx")).toBe(BUTTON_CONTENT)
+    expect(paths.filter((path) => path.includes("new-york-v4"))).toEqual([])
+  })
+
+  it("strips the registry style prefix before category and item prefixes", () => {
+    const fetched = fetchedButton(
+      {},
+      {
+        name: "approval-card",
+        type: "registry:block",
+        files: [
+          buttonFile({
+            path: "registry/new-york-v4/blocks/approval-card/utils.tsx",
+            type: "registry:block",
+          }),
+        ],
+      },
+    )
+    const plan = createSyncPlan([fetched], options())
+
+    expect(writeMap(plan).get("registry/blocks/approval-card/utils.tsx")).toBe(BUTTON_CONTENT)
+  })
+
   it("strips content from local files and keeps type and target", () => {
     const plan = createSyncPlan([fetchedButton()], options())
 

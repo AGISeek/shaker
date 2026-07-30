@@ -79,6 +79,10 @@ export function normalizeFilePath(
       `Upstream item "${itemName}" file path "${rawPath}" escapes the item directory`,
     )
   }
+  // Current upstream layout wraps files in a "registry/<style>/" prefix (e.g.
+  // "registry/new-york-v4/ui/button.tsx"); strip it before the category and
+  // item-name prefixes below.
+  if (segments[0] === "registry" && segments.length > 2) segments.splice(0, 2)
   // Strip the conventional upstream category prefix ("ui/button.tsx") and a
   // redundant item-name prefix ("ui/button/button.tsx"), if present.
   if (segments[0] === category) segments.shift()

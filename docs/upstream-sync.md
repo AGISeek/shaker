@@ -24,8 +24,8 @@ Shaker UI 可以把白名单内的上游 shadcn Registry 资产同步进 `regist
   "sources": [
     {
       "id": "shadcn",
-      "catalog": "https://ui.shadcn.com/r/registry.json",
-      "itemTemplate": "https://ui.shadcn.com/r/{name}.json",
+      "catalog": "https://ui.shadcn.com/r/index.json",
+      "itemTemplate": "https://ui.shadcn.com/r/styles/new-york-v4/{name}.json",
       "items": ["button"],
       "pin": { "kind": "git", "ref": "v2.0.0" },
       "allowDigestPin": false,
