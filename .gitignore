@@ -10,3 +10,5 @@ public/search-index.json
 playwright-report/
 test-results/
 *.tsbuildinfo
+.upstream-sync-*/
+.upstream-backup-*/
