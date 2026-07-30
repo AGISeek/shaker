@@ -7,12 +7,15 @@ export type PlannedWrite = { path: string; content: string }
 
 export type DependencyChange = { item: string; added: string[]; removed: string[] }
 
+export type DigestChange = { item: string; previous: string | undefined; next: string }
+
 export type SyncSummary = {
   added: number
   changed: number
   removed: number
   npmDependencies: DependencyChange[]
   registryDependencies: DependencyChange[]
+  digests: DigestChange[]
 }
 
 export type SyncPlan = {
@@ -285,6 +288,15 @@ export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOpti
   npmDependencies.sort((a, b) => compareStrings(a.item, b.item))
   registryDependencies.sort((a, b) => compareStrings(a.item, b.item))
 
+  const digests: DigestChange[] = []
+  for (const item of sortedNew) {
+    const previous = existingByName.get(item.name)?.meta?.sourceDigest
+    const next = item.registryItem.meta.sourceDigest
+    if (next !== undefined && previous !== next) {
+      digests.push({ item: item.name, previous, next })
+    }
+  }
+
   const sortedDeletes = [...deletes].sort(compareStrings)
   const removed = sortedDeletes.reduce(
     (count, dir) =>
@@ -303,6 +315,7 @@ export function createSyncPlan(items: FetchedItem[], options: CreateSyncPlanOpti
       removed,
       npmDependencies,
       registryDependencies,
+      digests,
     },
   }
 }

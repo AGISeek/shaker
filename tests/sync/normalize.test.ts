@@ -355,6 +355,30 @@ describe("createSyncPlan writes and deletes", () => {
     expect(plan.summary.removed).toBe(0)
   })
 
+  it("records digest transitions in the summary", () => {
+    const updated = createSyncPlan(
+      [fetchedButton()],
+      options({
+        existingItems: [managedExistingItem()],
+        acceptedDigests: new Map([["button", "sha256:new"]]),
+      }),
+    )
+    expect(updated.summary.digests).toEqual([
+      { item: "button", previous: "sha256:old", next: "sha256:new" },
+    ])
+
+    const added = createSyncPlan([fetchedButton()], options())
+    expect(added.summary.digests).toEqual([
+      { item: "button", previous: undefined, next: "sha256:new" },
+    ])
+
+    const unchanged = createSyncPlan(
+      [fetchedButton({ digest: "sha256:old" })],
+      options({ existingItems: [managedExistingItem()] }),
+    )
+    expect(unchanged.summary.digests).toEqual([])
+  })
+
   it("deletes item directories previously managed by this source that are gone upstream", () => {
     const stale = managedExistingItem({ name: "stale-widget" })
     const plan = createSyncPlan(
