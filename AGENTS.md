@@ -67,22 +67,36 @@ src/registry/                     # Registry 核心逻辑
   generate.ts                     # 生成预览映射与搜索索引
   search.ts                       # 客户端搜索排序
   search-index.ts                 # 搜索文档类型与转换
+src/sync/                         # 上游 Registry 同步器
+  config.ts                       # upstreams.json 白名单加载与校验
+  fetch-item.ts                   # 抓取上游条目并计算内容摘要
+  dependency-closure.ts           # 递归解析依赖闭包并改写为 @internal/*
+  normalize.ts                    # 上游条目规范化与共享路径工具
+  sync-plan.ts                    # 生成可审核的写入/删除计划（digest 审批闸门）
+  apply-plan.ts                   # 原子应用计划（暂存 + 校验 + rename 交换 + 回滚）
+  report.ts                       # 渲染审核报告
+  fs.ts                           # node:fs 间接层（测试注入故障用）
+upstreams.json                    # 上游 Registry 同步白名单（来源、pin、条目）
 scripts/                          # 构建与校验脚本
   validate-registry.mjs           # 校验 Registry
   generate-preview-map.mjs        # 生成 generated/preview-map.ts
   build-search-index.mjs          # 生成 public/search-index.json
   cli-smoke.mjs                   # 对静态产物执行真实 shadcn CLI 冒烟测试
+  sync-upstream.mjs               # 上游同步 CLI 编排入口（registry:sync）
   serve-static.mjs                # 轻量级静态文件服务器
   package-release.mjs             # 将 out 打包到 dist/<ref>
 tests/
   registry/                       # Registry 逻辑单元测试
+  sync/                           # 上游同步器单元/集成测试（本地 fixture HTTP 服务器）
   site/                           # 站点组件单元测试
   project/                        # 项目配置与发布脚本测试
   e2e/                            # Playwright 端到端测试
   fixtures/consumer/              # CLI 冒烟测试用的消费项目骨架
+  fixtures/upstream/              # 同步测试用的上游条目 JSON
 docs/                             # 面向贡献者的文档
   contributing.md                 # 贡献指南
   cli-setup.md                    # 消费项目 CLI 配置说明
+  upstream-sync.md                # 上游 Registry 同步流程与安全语义
   superpowers/                    # 设计规格与计划（只读参考）
 ```
 
@@ -101,6 +115,9 @@ pnpm registry:generate
 # 构建 shadcn Registry JSON（输出到 public/r）
 pnpm registry:build
 
+# 同步白名单上游资产（只改工作区文件，不 commit、不部署；真实同步由人工触发，CI 不访问外网）
+pnpm registry:sync --source <id> [--check] [--accept-digest <name=sha256:...>]
+
 # 完整构建（校验 + 生成 + registry:build + next build）
 pnpm build
 
@@ -116,6 +133,9 @@ pnpm test:e2e
 
 # shadcn CLI 冒烟测试（对 out 目录启动静态服务器并执行 list/search/view/add）
 pnpm test:cli
+
+# 上游同步器定向测试（本地 fixture 服务器；全量 pnpm test 已包含 tests/sync）
+pnpm test:sync
 
 # 本地静态预览
 pnpm serve:static out --port 3000
@@ -187,7 +207,7 @@ node scripts/package-release.mjs --ref <git-sha-or-tag>
 
 - `featured`：是否在首页精选展示。
 - `sourceDigest`：内容摘要（同步上游时填写）。
-- `sourceId`：管理该资产的上游来源 id（仅 `origin: "upstream"` 资产，由同步器写入；同步器同时在该资产目录写入 `.upstream-source` 标记文件）。
+- `sourceId`：管理该资产的上游来源 id（仅 `origin: "upstream"` 资产，由同步器写入；同步器同时在该资产目录写入 `.upstream-source` 标记文件，作为同步删除的守卫——只有标记内容匹配当前来源 id 的目录才允许被同步器删除）。
 - `replacedBy`：废弃资产的替代项名称（必须指向存在的资产，且不能指向自身）。
 
 ### 依赖约定
@@ -300,5 +320,6 @@ pnpm dlx shadcn@latest add @internal/button
 
 - `docs/contributing.md`：详细的资产贡献流程与 PR 审核清单。
 - `docs/cli-setup.md`：消费项目如何配置 shadcn CLI。
+- `docs/upstream-sync.md`：上游白名单同步的命令、固定版本策略与审核清单。
 - `docs/superpowers/specs/`：原始设计规格与架构决策记录。
 - 官方 Registry 文档：https://ui.shadcn.com/docs/registry

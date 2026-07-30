@@ -148,6 +148,18 @@ async function collectExistingFiles(root, items) {
   return files
 }
 
+/** True only when the failure is a missing root catalog file (ENOENT). */
+function isMissingRootCatalog(error, root) {
+  const cause = error?.cause
+  return (
+    cause !== null &&
+    typeof cause === "object" &&
+    cause.code === "ENOENT" &&
+    typeof cause.path === "string" &&
+    resolve(cause.path) === join(root, REGISTRY_ROOT, "registry.json")
+  )
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const root = resolve(args.root)
@@ -166,9 +178,17 @@ async function main() {
   )
 
   const plan = await runStage("create sync plan", source.id, async () => {
-    // A missing or unreadable catalog means this is the first sync into the
-    // root: plan against an empty registry.
-    const existingItems = await loadCatalog(root).catch(() => [])
+    const existingItems = await loadCatalog(root).catch((error) => {
+      // Only a missing root catalog falls back to an empty registry. A real
+      // first sync still requires the target repo to carry the catalog
+      // skeleton; this fallback only keeps that case's error message
+      // friendly. Anything else (invalid JSON, missing include) means a
+      // corrupted catalog and must fail here — silently planning against an
+      // empty registry would bypass the digest-approval gate and let
+      // --check hide the corruption.
+      if (isMissingRootCatalog(error, root)) return []
+      throw error
+    })
     const existingFiles = await collectExistingFiles(root, existingItems)
     return createSyncPlan(fetched, {
       registryRoot: REGISTRY_ROOT,
@@ -193,8 +213,7 @@ async function main() {
   }
 
   await runStage("apply sync plan", source.id, () => applySyncPlan(plan, root))
-  console.log(`Applied sync plan for source "${source.id}".`)
-}
+  console.log(`Applied sync plan for source "${source.id}".`)}
 
 try {
   await main()

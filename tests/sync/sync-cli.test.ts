@@ -347,6 +347,29 @@ describe("sync-upstream CLI", () => {
   )
 
   it(
+    "fails fast on a corrupted catalog instead of planning against an empty registry",
+    { timeout: CLI_TIMEOUT },
+    async () => {
+      await writeFile(join(tempRepo, "registry/registry.json"), "{ not valid json")
+
+      const result = await runSyncCli([
+        "--config",
+        fixtureConfig,
+        "--source",
+        "fixture",
+        "--root",
+        tempRepo,
+      ])
+
+      expect(result.exitCode).toBe(1)
+      expect(result.stderr).toContain("fixture")
+      expect(result.stderr).toContain("create sync plan")
+      // The corruption must not be treated as a first sync.
+      expect(await pathExists(join(tempRepo, "registry/ui/button/button.tsx"))).toBe(false)
+    },
+  )
+
+  it(
     "reports the source id and stage when fetching fails",
     { timeout: CLI_TIMEOUT },
     async () => {
